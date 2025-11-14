@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <%- include('../partials/header') %>
+
+    <main class="container">
+        <section class="search-section" style="margin-top: 2rem;">
+            <h1>Pesquisar Receitas</h1>
+            <form action="/pesquisa" method="GET" class="search-form">
+                <input type="text" name="termo" placeholder="Pesquisar receitas..." class="search-input" value="<%= termo %>">
+                <select name="categoria" class="search-select">
+                    <option value="">Todas as categorias</option>
+                    <% categorias.forEach(cat => { %>
+                        <option value="<%= cat.id %>" <%= cat.id == categoriaId ? 'selected' : '' %>>
+                            <%= cat.nome %>
+                        </option>
+                    <% }) %>
+                </select>
+                <button type="submit" class="btn btn-primary">Pesquisar</button>
+            </form>
+        </section>
+
+        <section class="receitas-recentes">
+            <h2>Resultados da Pesquisa (<%= receitas.length %>)</h2>
+            <div class="receitas-grid">
+                <% if (receitas && receitas.length > 0) { %>
+                    <% receitas.forEach(receita => { %>
+                        <div class="receita-card">
+                            <% if (receita.imagem) { %>
+                                <img src="<%= receita.imagem %>" alt="<%= receita.nome %>">
+                            <% } else { %>
+                                <div class="receita-placeholder">
+                                    <span>Sem imagem</span>
+                                </div>
+                            <% } %>
+                            <div class="receita-info">
+                                <h3><%= receita.nome %></h3>
+                                <p class="receita-autor">Por <%= receita.autor %></p>
+                                <div class="receita-meta">
+                                    <span class="badge badge-<%= receita.dificuldade_nivel.toLowerCase() %>">
+                                        <%= receita.dificuldade_nivel %>
+                                    </span>
+                                    <span class="receita-tempo">⏱️ <%= receita.tempo_preparacao %> min</span>
+                                    <span class="receita-custo">€<%= parseFloat(receita.custo).toFixed(2) %></span>
+                                </div>
+                                <a href="/receita/<%= receita.id %>" class="btn btn-secondary btn-small">Ver Receita</a>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <p>Nenhuma receita encontrada. Tente outros termos de pesquisa.</p>
+                <% } %>
+            </div>
+        </section>
+    </main>
+
+    <%- include('../partials/footer') %>
+</body>
+</html>

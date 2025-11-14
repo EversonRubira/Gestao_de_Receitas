@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/backoffice.css">
+</head>
+<body class="backoffice">
+    <%- include('../../partials/backoffice-header') %>
+
+    <div class="backoffice-container">
+        <%- include('../../partials/backoffice-sidebar') %>
+
+        <main class="backoffice-content">
+            <div class="page-header">
+                <h1>Gestão de Ingredientes</h1>
+            </div>
+
+            <div class="form-container" style="margin-bottom: 2rem;">
+                <h2>Novo Ingrediente</h2>
+                <form method="POST" action="/backoffice/ingredientes/novo">
+                    <div class="form-group">
+                        <label for="nome">Nome do Ingrediente:</label>
+                        <input type="text" id="nome" name="nome" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Adicionar Ingrediente</button>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Data de Criação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (ingredientes && ingredientes.length > 0) { %>
+                            <% ingredientes.forEach(ing => { %>
+                                <tr>
+                                    <td><%= ing.id %></td>
+                                    <td><%= ing.nome %></td>
+                                    <td><%= new Date(ing.data_criacao).toLocaleDateString('pt-PT') %></td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="3" class="text-center">Nenhum ingrediente encontrado.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

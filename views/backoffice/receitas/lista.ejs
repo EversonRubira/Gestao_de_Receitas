@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/backoffice.css">
+</head>
+<body class="backoffice">
+    <%- include('../../partials/backoffice-header') %>
+
+    <div class="backoffice-container">
+        <%- include('../../partials/backoffice-sidebar') %>
+
+        <main class="backoffice-content">
+            <div class="page-header">
+                <h1>Gestão de Receitas</h1>
+                <a href="/backoffice/receitas/nova" class="btn btn-primary">➕ Nova Receita</a>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Categoria</th>
+                            <th>Dificuldade</th>
+                            <th>Tempo</th>
+                            <th>Custo</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (receitas && receitas.length > 0) { %>
+                            <% receitas.forEach(receita => { %>
+                                <tr>
+                                    <td><%= receita.id %></td>
+                                    <td><%= receita.nome %></td>
+                                    <td><%= receita.categoria_nome %></td>
+                                    <td>
+                                        <span class="badge badge-<%= receita.dificuldade_nivel.toLowerCase() %>">
+                                            <%= receita.dificuldade_nivel %>
+                                        </span>
+                                    </td>
+                                    <td><%= receita.tempo_preparacao %> min</td>
+                                    <td>€<%= parseFloat(receita.custo).toFixed(2) %></td>
+                                    <td class="actions">
+                                        <a href="/receita/<%= receita.id %>" class="btn btn-small btn-info" target="_blank">Ver</a>
+                                        <a href="/backoffice/receitas/editar/<%= receita.id %>" class="btn btn-small btn-warning">Editar</a>
+                                        <form method="POST" action="/backoffice/receitas/eliminar/<%= receita.id %>" style="display:inline;" onsubmit="return confirm('Tem a certeza que deseja eliminar esta receita?')">
+                                            <button type="submit" class="btn btn-small btn-danger">Eliminar</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="7" class="text-center">Nenhuma receita encontrada.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

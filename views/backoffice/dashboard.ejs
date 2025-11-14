@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/backoffice.css">
+</head>
+<body class="backoffice">
+    <%- include('../partials/backoffice-header') %>
+
+    <div class="backoffice-container">
+        <%- include('../partials/backoffice-sidebar') %>
+
+        <main class="backoffice-content">
+            <h1>Dashboard</h1>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total de Receitas</h3>
+                    <p class="stat-number"><%= stats.total_receitas %></p>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Total de Utilizadores</h3>
+                    <p class="stat-number"><%= stats.total_utilizadores %></p>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Categorias</h3>
+                    <p class="stat-number"><%= stats.total_categorias %></p>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Ingredientes</h3>
+                    <p class="stat-number"><%= stats.total_ingredientes %></p>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <h2>Ações Rápidas</h2>
+                <div class="actions-grid">
+                    <a href="/backoffice/receitas/nova" class="action-card">
+                        <span class="action-icon">➕</span>
+                        <span>Nova Receita</span>
+                    </a>
+                    <a href="/backoffice/receitas" class="action-card">
+                        <span class="action-icon">📋</span>
+                        <span>Gerir Receitas</span>
+                    </a>
+                    <a href="/backoffice/categorias" class="action-card">
+                        <span class="action-icon">🗂️</span>
+                        <span>Gerir Categorias</span>
+                    </a>
+                    <a href="/backoffice/ingredientes" class="action-card">
+                        <span class="action-icon">🥕</span>
+                        <span>Gerir Ingredientes</span>
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

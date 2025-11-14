@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <%- include('../partials/header') %>
+
+    <main class="container">
+        <section class="page-title">
+            <h1><%= categoria.nome %></h1>
+            <% if (categoria.descricao) { %>
+                <p><%= categoria.descricao %></p>
+            <% } %>
+        </section>
+
+        <section class="receitas-recentes">
+            <h2>Receitas nesta categoria (<%= receitas.length %>)</h2>
+            <div class="receitas-grid">
+                <% if (receitas && receitas.length > 0) { %>
+                    <% receitas.forEach(receita => { %>
+                        <div class="receita-card">
+                            <% if (receita.imagem) { %>
+                                <img src="<%= receita.imagem %>" alt="<%= receita.nome %>">
+                            <% } else { %>
+                                <div class="receita-placeholder">
+                                    <span>Sem imagem</span>
+                                </div>
+                            <% } %>
+                            <div class="receita-info">
+                                <h3><%= receita.nome %></h3>
+                                <p class="receita-autor">Por <%= receita.autor %></p>
+                                <div class="receita-meta">
+                                    <span class="badge badge-<%= receita.dificuldade_nivel.toLowerCase() %>">
+                                        <%= receita.dificuldade_nivel %>
+                                    </span>
+                                    <span class="receita-tempo">⏱️ <%= receita.tempo_preparacao %> min</span>
+                                    <span class="receita-custo">€<%= parseFloat(receita.custo).toFixed(2) %></span>
+                                </div>
+                                <a href="/receita/<%= receita.id %>" class="btn btn-secondary btn-small">Ver Receita</a>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <p>Ainda não há receitas nesta categoria.</p>
+                <% } %>
+            </div>
+        </section>
+
+        <a href="/" class="btn btn-secondary" style="margin-top: 2rem;">Voltar ao Início</a>
+    </main>
+
+    <%- include('../partials/footer') %>
+</body>
+</html>

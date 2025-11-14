@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erro - <%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container" style="text-align: center; padding: 4rem 2rem;">
+        <h1 style="font-size: 3rem; color: var(--danger-color);">Erro</h1>
+        <h2><%= message %></h2>
+        <% if (error && error.stack) { %>
+            <pre style="text-align: left; background: #f5f5f5; padding: 1rem; border-radius: 5px; overflow-x: auto;">
+                <%= error.stack %>
+            </pre>
+        <% } %>
+        <a href="/" class="btn btn-primary" style="margin-top: 2rem;">Voltar ao Início</a>
+    </div>
+</body>
+</html>

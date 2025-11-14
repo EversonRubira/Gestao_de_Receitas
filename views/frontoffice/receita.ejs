@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <%- include('../partials/header') %>
+
+    <main class="container">
+        <article class="receita-detalhe">
+            <header class="receita-header">
+                <h1><%= receita.nome %></h1>
+                <p class="receita-autor">Por <%= receita.autor %> | <%= receita.criador_nome %></p>
+            </header>
+
+            <% if (receita.imagem) { %>
+                <div class="receita-imagem">
+                    <img src="<%= receita.imagem %>" alt="<%= receita.nome %>">
+                </div>
+            <% } %>
+
+            <div class="receita-info-detalhes">
+                <div class="info-item">
+                    <strong>Categoria:</strong>
+                    <span class="badge"><%= receita.categoria_nome %></span>
+                </div>
+                <div class="info-item">
+                    <strong>Dificuldade:</strong>
+                    <span class="badge badge-<%= receita.dificuldade_nivel.toLowerCase() %>">
+                        <%= receita.dificuldade_nivel %>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <strong>Tempo:</strong>
+                    <span><%= receita.tempo_preparacao %> minutos</span>
+                </div>
+                <div class="info-item">
+                    <strong>Porções:</strong>
+                    <span><%= receita.porcoes %></span>
+                </div>
+                <div class="info-item">
+                    <strong>Custo Estimado:</strong>
+                    <span>€<%= parseFloat(receita.custo).toFixed(2) %></span>
+                </div>
+                <% if (receita.media_avaliacoes) { %>
+                    <div class="info-item">
+                        <strong>Avaliação:</strong>
+                        <span>⭐ <%= parseFloat(receita.media_avaliacoes).toFixed(1) %> (<%= receita.num_avaliacoes %> avaliações)</span>
+                    </div>
+                <% } %>
+            </div>
+
+            <section class="receita-ingredientes">
+                <h2>Ingredientes</h2>
+                <ul class="ingredientes-lista">
+                    <% if (ingredientes && ingredientes.length > 0) { %>
+                        <% ingredientes.forEach(ing => { %>
+                            <li>
+                                <span class="quantidade"><%= ing.quantidade %></span>
+                                <span class="nome"><%= ing.nome %></span>
+                            </li>
+                        <% }) %>
+                    <% } else { %>
+                        <li>Sem ingredientes especificados</li>
+                    <% } %>
+                </ul>
+            </section>
+
+            <section class="receita-preparacao">
+                <h2>Modo de Preparação</h2>
+                <div class="preparacao-texto">
+                    <%= receita.descricao_preparacao.split('\n').map(line => '<p>' + line + '</p>').join('') %>
+                </div>
+            </section>
+
+            <div class="receita-acoes">
+                <a href="/" class="btn btn-secondary">Voltar</a>
+            </div>
+        </article>
+    </main>
+
+    <%- include('../partials/footer') %>
+</body>
+</html>

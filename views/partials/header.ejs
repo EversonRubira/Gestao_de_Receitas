@@ -1,0 +1,24 @@
+<header class="main-header">
+    <nav class="navbar container">
+        <div class="navbar-brand">
+            <a href="/">🍳 Gestão de Receitas</a>
+        </div>
+        <ul class="navbar-menu">
+            <li><a href="/">Início</a></li>
+            <li><a href="/pesquisa">Pesquisar</a></li>
+            <% if (utilizador) { %>
+                <% if (utilizador.tipo === 'admin') { %>
+                    <li><a href="/backoffice">Backoffice</a></li>
+                <% } %>
+                <li class="dropdown">
+                    <span><%= utilizador.nome %> ▼</span>
+                    <ul class="dropdown-menu">
+                        <li><a href="/logout">Sair</a></li>
+                    </ul>
+                </li>
+            <% } else { %>
+                <li><a href="/login" class="btn btn-primary btn-small">Login</a></li>
+            <% } %>
+        </ul>
+    </nav>
+</header>

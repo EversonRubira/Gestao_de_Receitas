@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <%- include('../partials/header') %>
+
+    <main class="container">
+        <section class="hero">
+            <h1>Descubra Receitas Deliciosas</h1>
+            <p>Explore nossa coleção de receitas e encontre a inspiração para sua próxima refeição</p>
+        </section>
+
+        <section class="search-section">
+            <form action="/pesquisa" method="GET" class="search-form">
+                <input type="text" name="termo" placeholder="Pesquisar receitas..." class="search-input">
+                <select name="categoria" class="search-select">
+                    <option value="">Todas as categorias</option>
+                    <% categorias.forEach(cat => { %>
+                        <option value="<%= cat.id %>"><%= cat.nome %></option>
+                    <% }) %>
+                </select>
+                <button type="submit" class="btn btn-primary">Pesquisar</button>
+            </form>
+        </section>
+
+        <section class="categorias-destaque">
+            <h2>Categorias</h2>
+            <div class="categorias-grid">
+                <% categorias.slice(0, 6).forEach(cat => { %>
+                    <a href="/categoria/<%= cat.id %>" class="categoria-card">
+                        <h3><%= cat.nome %></h3>
+                        <span><%= cat.total_receitas %> receitas</span>
+                    </a>
+                <% }) %>
+            </div>
+        </section>
+
+        <section class="receitas-recentes">
+            <h2>Receitas Recentes</h2>
+            <div class="receitas-grid">
+                <% if (receitas && receitas.length > 0) { %>
+                    <% receitas.slice(0, 6).forEach(receita => { %>
+                        <div class="receita-card">
+                            <% if (receita.imagem) { %>
+                                <img src="<%= receita.imagem %>" alt="<%= receita.nome %>">
+                            <% } else { %>
+                                <div class="receita-placeholder">
+                                    <span>Sem imagem</span>
+                                </div>
+                            <% } %>
+                            <div class="receita-info">
+                                <h3><%= receita.nome %></h3>
+                                <p class="receita-autor">Por <%= receita.autor %></p>
+                                <div class="receita-meta">
+                                    <span class="badge badge-<%= receita.dificuldade_nivel.toLowerCase() %>">
+                                        <%= receita.dificuldade_nivel %>
+                                    </span>
+                                    <span class="receita-tempo">
+                                        <svg width="16" height="16" fill="currentColor">
+                                            <circle cx="8" cy="8" r="7" stroke="currentColor" fill="none"/>
+                                            <path d="M8 4v4l3 3"/>
+                                        </svg>
+                                        <%= receita.tempo_preparacao %> min
+                                    </span>
+                                    <span class="receita-custo">€<%= parseFloat(receita.custo).toFixed(2) %></span>
+                                </div>
+                                <% if (receita.media_avaliacoes) { %>
+                                    <div class="receita-rating">
+                                        ⭐ <%= parseFloat(receita.media_avaliacoes).toFixed(1) %>
+                                        (<%= receita.num_avaliacoes %>)
+                                    </div>
+                                <% } %>
+                                <a href="/receita/<%= receita.id %>" class="btn btn-secondary btn-small">Ver Receita</a>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <p>Ainda não há receitas disponíveis.</p>
+                <% } %>
+            </div>
+        </section>
+    </main>
+
+    <%- include('../partials/footer') %>
+</body>
+</html>

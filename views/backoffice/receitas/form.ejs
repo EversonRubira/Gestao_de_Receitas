@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/backoffice.css">
+</head>
+<body class="backoffice">
+    <%- include('../../partials/backoffice-header') %>
+
+    <div class="backoffice-container">
+        <%- include('../../partials/backoffice-sidebar') %>
+
+        <main class="backoffice-content">
+            <h1><%= title %></h1>
+
+            <% if (error) { %>
+                <div class="alert alert-error">
+                    <%= error %>
+                </div>
+            <% } %>
+
+            <div class="form-container">
+                <form method="POST" action="<%= receita ? '/backoffice/receitas/editar/' + receita.id : '/backoffice/receitas/nova' %>">
+                    <div class="form-group">
+                        <label for="nome">Nome da Receita: *</label>
+                        <input type="text" id="nome" name="nome" value="<%= receita ? receita.nome : '' %>" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="autor">Autor: *</label>
+                        <input type="text" id="autor" name="autor" value="<%= receita ? receita.autor : '' %>" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="categoria_id">Categoria: *</label>
+                            <select id="categoria_id" name="categoria_id" required>
+                                <option value="">Selecione uma categoria</option>
+                                <% categorias.forEach(cat => { %>
+                                    <option value="<%= cat.id %>" <%= receita && receita.categoria_id == cat.id ? 'selected' : '' %>>
+                                        <%= cat.nome %>
+                                    </option>
+                                <% }) %>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dificuldade_id">Dificuldade: *</label>
+                            <select id="dificuldade_id" name="dificuldade_id" required>
+                                <option value="">Selecione a dificuldade</option>
+                                <% dificuldades.forEach(dif => { %>
+                                    <option value="<%= dif.id %>" <%= receita && receita.dificuldade_id == dif.id ? 'selected' : '' %>>
+                                        <%= dif.nivel %>
+                                    </option>
+                                <% }) %>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tempo_preparacao">Tempo de Preparação (minutos): *</label>
+                            <input type="number" id="tempo_preparacao" name="tempo_preparacao" min="1"
+                                   value="<%= receita ? receita.tempo_preparacao : '' %>" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="custo">Custo (€): *</label>
+                            <input type="number" id="custo" name="custo" step="0.01" min="0"
+                                   value="<%= receita ? receita.custo : '' %>" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="porcoes">Porções: *</label>
+                            <input type="number" id="porcoes" name="porcoes" min="1"
+                                   value="<%= receita ? receita.porcoes : '1' %>" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="imagem">URL da Imagem:</label>
+                        <input type="text" id="imagem" name="imagem" value="<%= receita ? (receita.imagem || '') : '' %>">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="descricao_preparacao">Descrição da Preparação: *</label>
+                        <textarea id="descricao_preparacao" name="descricao_preparacao" required
+                                  style="min-height: 200px;"><%= receita ? receita.descricao_preparacao : '' %></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ingredientes:</label>
+                        <div id="ingredientes-container" style="border: 1px solid #ddd; padding: 15px; border-radius: 4px; background: #f9f9f9;">
+                            <div id="ingredientes-lista" style="margin-bottom: 10px;">
+                                <!-- Ingredientes adicionados aparecerão aqui -->
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                <select id="ingrediente-select" style="flex: 2;">
+                                    <option value="">Selecione um ingrediente</option>
+                                    <% ingredientes.forEach(ing => { %>
+                                        <option value="<%= ing.id %>"><%= ing.nome %></option>
+                                    <% }) %>
+                                </select>
+                                <input type="text" id="quantidade-input" placeholder="Quantidade (ex: 200g, 2 unidades)" style="flex: 2;">
+                                <button type="button" id="adicionar-ingrediente" class="btn btn-secondary" style="flex: 1;">Adicionar</button>
+                            </div>
+                        </div>
+                        <input type="hidden" id="ingredientes" name="ingredientes" value="">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <%= receita ? 'Atualizar Receita' : 'Criar Receita' %>
+                        </button>
+                        <a href="/backoffice/receitas" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+
+                <script>
+                    // Gestão de ingredientes
+                    let ingredientesSelecionados = [];
+
+                    <% if (receita && receita.ingredientes) { %>
+                        ingredientesSelecionados = <%= JSON.stringify(receita.ingredientes.map(i => ({
+                            id: i.ingrediente_id,
+                            nome: i.nome,
+                            quantidade: i.quantidade
+                        }))) %>;
+                        renderizarIngredientes();
+                    <% } %>
+
+                    document.getElementById('adicionar-ingrediente').addEventListener('click', function() {
+                        const select = document.getElementById('ingrediente-select');
+                        const quantidade = document.getElementById('quantidade-input').value.trim();
+
+                        if (!select.value || !quantidade) {
+                            alert('Por favor, selecione um ingrediente e informe a quantidade.');
+                            return;
+                        }
+
+                        const ingredienteId = parseInt(select.value);
+                        const ingredienteNome = select.options[select.selectedIndex].text;
+
+                        // Verificar se já existe
+                        if (ingredientesSelecionados.find(i => i.id === ingredienteId)) {
+                            alert('Este ingrediente já foi adicionado.');
+                            return;
+                        }
+
+                        ingredientesSelecionados.push({
+                            id: ingredienteId,
+                            nome: ingredienteNome,
+                            quantidade: quantidade
+                        });
+
+                        // Limpar campos
+                        select.value = '';
+                        document.getElementById('quantidade-input').value = '';
+
+                        renderizarIngredientes();
+                    });
+
+                    function renderizarIngredientes() {
+                        const lista = document.getElementById('ingredientes-lista');
+
+                        if (ingredientesSelecionados.length === 0) {
+                            lista.innerHTML = '<p style="color: #666; margin: 0;">Nenhum ingrediente adicionado.</p>';
+                        } else {
+                            lista.innerHTML = ingredientesSelecionados.map((ing, index) => `
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: white; margin-bottom: 5px; border-radius: 4px;">
+                                    <span><strong>${ing.nome}</strong> - ${ing.quantidade}</span>
+                                    <button type="button" onclick="removerIngrediente(${index})" class="btn btn-small btn-danger" style="padding: 4px 8px;">Remover</button>
+                                </div>
+                            `).join('');
+                        }
+
+                        // Atualizar campo hidden
+                        document.getElementById('ingredientes').value = JSON.stringify(ingredientesSelecionados);
+                    }
+
+                    function removerIngrediente(index) {
+                        ingredientesSelecionados.splice(index, 1);
+                        renderizarIngredientes();
+                    }
+
+                    // Inicializar visualização
+                    renderizarIngredientes();
+                </script>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
