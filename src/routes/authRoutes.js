@@ -15,8 +15,8 @@ router.get('/login', redirectIfAuthenticated, (req, res) => {
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
+        console.log('Tentativa de login:', email);
 
-        // Validar campos
         if (!email || !password) {
             return res.render('login', {
                 title: 'Login',
@@ -24,27 +24,26 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        // Buscar utilizador
         const utilizador = await Utilizador.findByEmail(email);
 
         if (!utilizador) {
+            console.log('Utilizador não encontrado');
             return res.render('login', {
                 title: 'Login',
                 error: 'Email ou password incorretos'
             });
         }
 
-        // Verificar password
         const passwordValida = await Utilizador.verificarPassword(password, utilizador.password_hash);
 
         if (!passwordValida) {
+            console.log('Password inválida');
             return res.render('login', {
                 title: 'Login',
                 error: 'Email ou password incorretos'
             });
         }
 
-        // Criar sessão
         req.session.utilizador = {
             id: utilizador.id,
             nome: utilizador.nome,
@@ -52,7 +51,8 @@ router.post('/login', async (req, res) => {
             tipo: utilizador.tipo
         };
 
-        // Redirecionar conforme tipo
+        console.log('Login bem sucedido:', utilizador.nome);
+
         if (utilizador.tipo === 'admin') {
             res.redirect('/backoffice');
         } else {

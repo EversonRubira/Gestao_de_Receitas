@@ -5,9 +5,7 @@ const Categoria = require('../models/Categoria');
 const Ingrediente = require('../models/Ingrediente');
 const { isAuthenticated } = require('../middleware/auth');
 
-// ========== RECEITAS API ==========
-
-// GET /api/receitas - Listar todas as receitas
+// GET /api/receitas - Listar receitas
 router.get('/receitas', async (req, res) => {
     try {
         const { termo, categoria, dificuldade } = req.query;
@@ -33,7 +31,7 @@ router.get('/receitas', async (req, res) => {
     }
 });
 
-// GET /api/receitas/:id - Obter receita específica
+// GET /api/receitas/:id - Obter receita por ID
 router.get('/receitas/:id', async (req, res) => {
     try {
         const receita = await Receita.findById(req.params.id);
@@ -63,7 +61,7 @@ router.get('/receitas/:id', async (req, res) => {
     }
 });
 
-// POST /api/receitas - Criar nova receita
+// POST /api/receitas - Criar receita
 router.post('/receitas', isAuthenticated, async (req, res) => {
     try {
         const dados = {
@@ -73,7 +71,6 @@ router.post('/receitas', isAuthenticated, async (req, res) => {
 
         const receitaId = await Receita.create(dados);
 
-        // Adicionar ingredientes se fornecidos
         if (req.body.ingredientes && Array.isArray(req.body.ingredientes)) {
             for (const ing of req.body.ingredientes) {
                 const ingredienteId = await Ingrediente.findOrCreate(ing.nome);
@@ -145,9 +142,7 @@ router.delete('/receitas/:id', isAuthenticated, async (req, res) => {
     }
 });
 
-// ========== CATEGORIAS API ==========
-
-// GET /api/categorias - Listar todas as categorias
+// Categorias
 router.get('/categorias', async (req, res) => {
     try {
         const categorias = await Categoria.findAll();
@@ -164,9 +159,7 @@ router.get('/categorias', async (req, res) => {
     }
 });
 
-// ========== INGREDIENTES API ==========
-
-// GET /api/ingredientes - Listar todos os ingredientes
+// Ingredientes
 router.get('/ingredientes', async (req, res) => {
     try {
         const ingredientes = await Ingrediente.findAll();
@@ -183,11 +176,9 @@ router.get('/ingredientes', async (req, res) => {
     }
 });
 
-// ========== SERVIÇO EXTERNO - TheMealDB ==========
-
+// API Externa - TheMealDB
 const axios = require('axios');
 
-// GET /api/external/random - Obter receita aleatória do TheMealDB
 router.get('/external/random', async (req, res) => {
     try {
         const response = await axios.get('https://www.themealdb.com/api/json/v1/1/random.php');
@@ -204,7 +195,6 @@ router.get('/external/random', async (req, res) => {
     }
 });
 
-// GET /api/external/search/:term - Pesquisar receitas no TheMealDB
 router.get('/external/search/:term', async (req, res) => {
     try {
         const response = await axios.get(

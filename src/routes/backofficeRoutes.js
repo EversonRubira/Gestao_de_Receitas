@@ -5,6 +5,7 @@ const Receita = require('../models/Receita');
 const Categoria = require('../models/Categoria');
 const Ingrediente = require('../models/Ingrediente');
 const db = require('../config/database');
+const upload = require('../config/multer');
 
 // Todas as rotas do backoffice requerem autenticação de admin
 router.use(isAuthenticated);
@@ -69,12 +70,20 @@ router.get('/receitas/nova', async (req, res) => {
 });
 
 // Criar receita
-router.post('/receitas/nova', async (req, res) => {
+router.post('/receitas/nova', upload.single('imagem'), async (req, res) => {
     try {
-        const receitaId = await Receita.create({
+        // Preparar dados da receita
+        const receitaData = {
             ...req.body,
             utilizador_id: req.session.utilizador.id
-        });
+        };
+
+        // Se foi feito upload de imagem, salvar o caminho
+        if (req.file) {
+            receitaData.imagem = '/uploads/receitas/' + req.file.filename;
+        }
+
+        const receitaId = await Receita.create(receitaData);
 
         // Processar ingredientes
         if (req.body.ingredientes) {
@@ -87,7 +96,7 @@ router.post('/receitas/nova', async (req, res) => {
         res.redirect('/backoffice/receitas');
     } catch (error) {
         console.error('Erro ao criar receita:', error);
-        res.status(500).send('Erro ao criar receita');
+        res.status(500).send('Erro ao criar receita: ' + error.message);
     }
 });
 
@@ -118,9 +127,18 @@ router.get('/receitas/editar/:id', async (req, res) => {
 });
 
 // Atualizar receita
-router.post('/receitas/editar/:id', async (req, res) => {
+router.post('/receitas/editar/:id', upload.single('imagem'), async (req, res) => {
     try {
-        await Receita.update(req.params.id, req.body);
+        // Preparar dados da receita
+        const receitaData = { ...req.body };
+
+        // Se foi feito upload de nova imagem, substituir
+        if (req.file) {
+            receitaData.imagem = '/uploads/receitas/' + req.file.filename;
+            // TODO: Apagar imagem antiga se existir
+        }
+
+        await Receita.update(req.params.id, receitaData);
 
         // Atualizar ingredientes (remover todos e adicionar novamente)
         // Aqui pode implementar lógica mais sofisticada se necessário
@@ -128,7 +146,7 @@ router.post('/receitas/editar/:id', async (req, res) => {
         res.redirect('/backoffice/receitas');
     } catch (error) {
         console.error('Erro ao atualizar receita:', error);
-        res.status(500).send('Erro ao atualizar receita');
+        res.status(500).send('Erro ao atualizar receita: ' + error.message);
     }
 });
 

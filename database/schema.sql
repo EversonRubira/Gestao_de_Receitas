@@ -94,19 +94,19 @@ INSERT INTO dificuldades (nivel, ordem) VALUES
 
 -- Categorias
 INSERT INTO categorias (nome, descricao) VALUES
-('Entradas', 'Pratos para começar a refeição'),
+('Entradas', 'Pratos para comecar a refeicao'),
 ('Sopas', 'Sopas e caldos'),
-('Pratos Principais', 'Prato principal da refeição'),
+('Pratos Principais', 'Prato principal da refeicao'),
 ('Sobremesas', 'Doces e sobremesas'),
 ('Bebidas', 'Bebidas e sumos'),
 ('Snacks', 'Lanches e petiscos'),
 ('Vegetariano', 'Pratos vegetarianos'),
 ('Vegano', 'Pratos veganos');
 
--- Utilizador admin padrão (password: admin123)
+-- Utilizador admin padrao (password: admin123)
 INSERT INTO utilizadores (nome, email, password_hash, tipo) VALUES
 ('Administrador', 'admin@receitas.pt', '$2a$10$AFlKtM7NeobYrcTnTKKpRei1CpfVsTgrqWKHBJbEAHTp18D4ixLUy', 'admin'),
-('João Silva', 'joao@exemplo.pt', '$2a$10$Jf84fiQxImXFM.iTn413s.eSmW99MiIpYsx5Tw/fOHJX9KEVowDXq', 'user');
+('Joao Silva', 'joao@exemplo.pt', '$2a$10$Jf84fiQxImXFM.iTn413s.eSmW99MiIpYsx5Tw/fOHJX9KEVowDXq', 'user');
 
 -- Ingredientes comuns
 INSERT INTO ingredientes (nome) VALUES
@@ -123,15 +123,15 @@ INSERT INTO ingredientes (nome) VALUES
 ('Ovos'),
 ('Leite'),
 ('Farinha'),
-('Açúcar'),
+('Acucar'),
 ('Manteiga'),
 ('Frango'),
 ('Carne de Vaca'),
 ('Peixe'),
-('Camarão'),
+('Camarao'),
 ('Cenoura'),
 ('Courgette'),
-('Brócolos'),
+('Brocolos'),
 ('Chocolate'),
 ('Natas'),
 ('Vinho Branco');
@@ -166,7 +166,7 @@ VALUES
 (
     'Frango Assado com Batatas',
     'Carlos Mendes',
-    '1. Tempere o frango com sal, pimenta, alho e azeite\n2. Deixe marinar por 30 minutos\n3. Corte as batatas em gomos\n4. Tempere as batatas com sal, azeite e alecrim\n5. Coloque o frango e as batatas no tabuleiro\n6. Leve ao forno a 180°C por 60 minutos\n7. Vire as batatas a meio da cozedura\n8. Sirva quente',
+    '1. Tempere o frango com sal, pimenta, alho e azeite\n2. Deixe marinar por 30 minutos\n3. Corte as batatas em gomos\n4. Tempere as batatas com sal, azeite e alecrim\n5. Coloque o frango e as batatas no tabuleiro\n6. Leve ao forno a 180C por 60 minutos\n7. Vire as batatas a meio da cozedura\n8. Sirva quente',
     90,
     12.50,
     4,
@@ -177,7 +177,7 @@ VALUES
 (
     'Mousse de Chocolate',
     'Ana Rodrigues',
-    '1. Derreta o chocolate em banho-maria\n2. Separe as gemas das claras\n3. Misture as gemas ao chocolate derretido\n4. Bata as claras em castelo firme\n5. Adicione o açúcar às claras gradualmente\n6. Incorpore delicadamente as claras ao chocolate\n7. Distribua por taças\n8. Leve ao frigorífico por 3 horas\n9. Sirva bem fresco',
+    '1. Derreta o chocolate em banho-maria\n2. Separe as gemas das claras\n3. Misture as gemas ao chocolate derretido\n4. Bata as claras em castelo firme\n5. Adicione o acucar as claras gradualmente\n6. Incorpore delicadamente as claras ao chocolate\n7. Distribua por tacas\n8. Leve ao frigorifico por 3 horas\n9. Sirva bem fresco',
     20,
     6.00,
     6,
@@ -188,7 +188,7 @@ VALUES
 (
     'Sopa de Legumes',
     'Teresa Costa',
-    '1. Descasque e corte todos os legumes em cubos\n2. Refogue a cebola e o alho no azeite\n3. Adicione os legumes e refogue por 5 minutos\n4. Cubra com água (cerca de 1,5L)\n5. Adicione sal a gosto\n6. Deixe cozinhar por 30 minutos\n7. Triture com a varinha mágica\n8. Sirva quente com um fio de azeite',
+    '1. Descasque e corte todos os legumes em cubos\n2. Refogue a cebola e o alho no azeite\n3. Adicione os legumes e refogue por 5 minutos\n4. Cubra com agua (cerca de 1,5L)\n5. Adicione sal a gosto\n6. Deixe cozinhar por 30 minutos\n7. Triture com a varinha magica\n8. Sirva quente com um fio de azeite',
     45,
     4.00,
     4,

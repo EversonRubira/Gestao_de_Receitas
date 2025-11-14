@@ -1,7 +1,7 @@
+// Configuração MySQL
 const mysql = require('mysql2');
 require('dotenv').config();
 
-// Criar pool de conexões
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
@@ -11,10 +11,15 @@ const pool = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    charset: 'utf8mb4'
+    charset: 'utf8mb4',
+    typeCast: function (field, next) {
+        if (field.type === 'VAR_STRING' || field.type === 'STRING' || field.type === 'TINY_BLOB' || field.type === 'MEDIUM_BLOB' || field.type === 'LONG_BLOB' || field.type === 'BLOB') {
+            return field.string();
+        }
+        return next();
+    }
 });
 
-// Versão com Promises
 const promisePool = pool.promise();
 
 // Testar conexão
@@ -23,9 +28,9 @@ pool.getConnection((err, connection) => {
         console.error('Erro ao conectar à base de dados:', err.message);
         return;
     }
-    console.log('Conexão à base de dados estabelecida com sucesso!');
 
-    // Configurar charset UTF-8 para a conexão
+    console.log('Conexão à base de dados OK');
+
     connection.query("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'", (error) => {
         if (error) {
             console.error('Erro ao configurar charset:', error.message);
@@ -33,7 +38,6 @@ pool.getConnection((err, connection) => {
             return;
         }
 
-        // Configurar character set do cliente
         connection.query("SET CHARACTER SET utf8mb4", (error) => {
             if (error) {
                 console.error('Erro ao configurar character set:', error.message);

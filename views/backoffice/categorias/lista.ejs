@@ -8,9 +8,11 @@
     <link rel="stylesheet" href="/css/backoffice.css">
 </head>
 <body class="backoffice">
+    <!-- Header do backoffice -->
     <%- include('../../partials/backoffice-header') %>
 
     <div class="backoffice-container">
+        <!-- Menu lateral -->
         <%- include('../../partials/backoffice-sidebar') %>
 
         <main class="backoffice-content">
@@ -18,6 +20,7 @@
                 <h1>Gestão de Categorias</h1>
             </div>
 
+            <!-- Formulário para adicionar nova categoria -->
             <div class="form-container" style="margin-bottom: 2rem;">
                 <h2>Nova Categoria</h2>
                 <form method="POST" action="/backoffice/categorias/nova">
@@ -26,33 +29,40 @@
                         <input type="text" id="nome" name="nome" required>
                     </div>
                     <div class="form-group">
-                        <label for="descricao">Descrição:</label>
+                        <label for="descricao">Descricao:</label>
                         <textarea id="descricao" name="descricao"></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary">Adicionar Categoria</button>
                 </form>
             </div>
 
+            <!-- Tabela com lista de categorias -->
             <div class="table-container">
                 <table class="data-table">
                     <thead>
                         <tr>
                             <th>ID</th>
                             <th>Nome</th>
-                            <th>Descrição</th>
+                            <th>Descricao</th>
                             <th>Total de Receitas</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <% if (categorias && categorias.length > 0) { %>
-                            <% categorias.forEach(cat => { %>
+                        <% if (categorias.length > 0) { %>
+                            <% for (let i = 0; i < categorias.length; i++) { %>
                                 <tr>
-                                    <td><%= cat.id %></td>
-                                    <td><%= cat.nome %></td>
-                                    <td><%= cat.descricao || '-' %></td>
-                                    <td><%= cat.total_receitas %></td>
+                                    <td><%= categorias[i].id %></td>
+                                    <td><%= categorias[i].nome %></td>
+                                    <td>
+                                        <% if (categorias[i].descricao) { %>
+                                            <%= categorias[i].descricao %>
+                                        <% } else { %>
+                                            -
+                                        <% } %>
+                                    </td>
+                                    <td><%= categorias[i].total_receitas %></td>
                                 </tr>
-                            <% }) %>
+                            <% } %>
                         <% } else { %>
                             <tr>
                                 <td colspan="4" class="text-center">Nenhuma categoria encontrada.</td>

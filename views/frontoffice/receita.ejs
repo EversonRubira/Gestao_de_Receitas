@@ -29,7 +29,7 @@
                 </div>
                 <div class="info-item">
                     <strong>Dificuldade:</strong>
-                    <span class="badge badge-<%= receita.dificuldade_nivel.toLowerCase() %>">
+                    <span class="badge badge-<%= receita.dificuldade_nivel.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() %>">
                         <%= receita.dificuldade_nivel %>
                     </span>
                 </div>
@@ -72,7 +72,7 @@
             <section class="receita-preparacao">
                 <h2>Modo de Preparação</h2>
                 <div class="preparacao-texto">
-                    <%= receita.descricao_preparacao.split('\n').map(line => '<p>' + line + '</p>').join('') %>
+                    <%- receita.descricao_preparacao.split('\n').map(line => '<p>' + line + '</p>').join('') %>
                 </div>
             </section>
 

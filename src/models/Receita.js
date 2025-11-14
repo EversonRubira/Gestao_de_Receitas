@@ -1,12 +1,11 @@
 const db = require('../config/database');
 
 class Receita {
+
     // Listar todas as receitas
     static async findAll() {
         const [rows] = await db.query(`
-            SELECT r.*, c.nome as categoria_nome, d.nivel as dificuldade_nivel,
-                   (SELECT AVG(classificacao) FROM avaliacoes WHERE receita_id = r.id) as media_avaliacoes,
-                   (SELECT COUNT(*) FROM avaliacoes WHERE receita_id = r.id) as num_avaliacoes
+            SELECT r.*, c.nome as categoria_nome, d.nivel as dificuldade_nivel
             FROM receitas r
             JOIN categorias c ON r.categoria_id = c.id
             JOIN dificuldades d ON r.dificuldade_id = d.id
@@ -19,9 +18,7 @@ class Receita {
     static async findById(id) {
         const [rows] = await db.query(`
             SELECT r.*, c.nome as categoria_nome, d.nivel as dificuldade_nivel,
-                   u.nome as criador_nome,
-                   (SELECT AVG(classificacao) FROM avaliacoes WHERE receita_id = r.id) as media_avaliacoes,
-                   (SELECT COUNT(*) FROM avaliacoes WHERE receita_id = r.id) as num_avaliacoes
+                   u.nome as criador_nome
             FROM receitas r
             JOIN categorias c ON r.categoria_id = c.id
             JOIN dificuldades d ON r.dificuldade_id = d.id
@@ -64,30 +61,20 @@ class Receita {
         return result.insertId;
     }
 
-    // Atualizar receita
     static async update(id, dados) {
         const [result] = await db.query(`
             UPDATE receitas
             SET nome = ?, autor = ?, descricao_preparacao = ?, tempo_preparacao = ?,
-                custo = ?, porcoes = ?, categoria_id = ?, dificuldade_id = ?,
-                imagem = ?
+                custo = ?, porcoes = ?, categoria_id = ?, dificuldade_id = ?, imagem = ?
             WHERE id = ?
         `, [
-            dados.nome,
-            dados.autor,
-            dados.descricao_preparacao,
-            dados.tempo_preparacao,
-            dados.custo,
-            dados.porcoes,
-            dados.categoria_id,
-            dados.dificuldade_id,
-            dados.imagem,
-            id
+            dados.nome, dados.autor, dados.descricao_preparacao,
+            dados.tempo_preparacao, dados.custo, dados.porcoes,
+            dados.categoria_id, dados.dificuldade_id, dados.imagem, id
         ]);
         return result.affectedRows > 0;
     }
 
-    // Eliminar receita
     static async delete(id) {
         const [result] = await db.query('DELETE FROM receitas WHERE id = ?', [id]);
         return result.affectedRows > 0;
@@ -115,8 +102,7 @@ class Receita {
     // Buscar por categoria
     static async findByCategoria(categoriaId) {
         const [rows] = await db.query(`
-            SELECT r.*, c.nome as categoria_nome, d.nivel as dificuldade_nivel,
-                   (SELECT AVG(classificacao) FROM avaliacoes WHERE receita_id = r.id) as media_avaliacoes
+            SELECT r.*, c.nome as categoria_nome, d.nivel as dificuldade_nivel
             FROM receitas r
             JOIN categorias c ON r.categoria_id = c.id
             JOIN dificuldades d ON r.dificuldade_id = d.id
@@ -126,11 +112,9 @@ class Receita {
         return rows;
     }
 
-    // Buscar receitas (com filtros opcionais)
     static async search(termo, categoriaId = null, dificuldadeId = null) {
         let query = `
-            SELECT r.*, c.nome as categoria_nome, d.nivel as dificuldade_nivel,
-                   (SELECT AVG(classificacao) FROM avaliacoes WHERE receita_id = r.id) as media_avaliacoes
+            SELECT r.*, c.nome as categoria_nome, d.nivel as dificuldade_nivel
             FROM receitas r
             JOIN categorias c ON r.categoria_id = c.id
             JOIN dificuldades d ON r.dificuldade_id = d.id
