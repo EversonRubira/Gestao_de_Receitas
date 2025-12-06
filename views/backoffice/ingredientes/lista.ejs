@@ -39,14 +39,14 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <% if (ingredientes && ingredientes.length > 0) { %>
-                            <% ingredientes.forEach(ing => { %>
+                        <% if (ingredientes.length > 0) { %>
+                            <% for (let i = 0; i < ingredientes.length; i++) { %>
                                 <tr>
-                                    <td><%= ing.id %></td>
-                                    <td><%= ing.nome %></td>
-                                    <td><%= new Date(ing.data_criacao).toLocaleDateString('pt-PT') %></td>
+                                    <td><%= ingredientes[i].id %></td>
+                                    <td><%= ingredientes[i].nome %></td>
+                                    <td><%= ingredientes[i].data_criacao %></td>
                                 </tr>
-                            <% }) %>
+                            <% } %>
                         <% } else { %>
                             <tr>
                                 <td colspan="3" class="text-center">Nenhum ingrediente encontrado.</td>

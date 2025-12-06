@@ -44,13 +44,11 @@ router.get('/receitas/:id', async (req, res) => {
         }
 
         const ingredientes = await Receita.getIngredientes(req.params.id);
+        receita.ingredientes = ingredientes;
 
         res.json({
             success: true,
-            data: {
-                ...receita,
-                ingredientes
-            }
+            data: receita
         });
     } catch (error) {
         console.error('Erro ao obter receita:', error);
@@ -64,15 +62,13 @@ router.get('/receitas/:id', async (req, res) => {
 // POST /api/receitas - Criar receita
 router.post('/receitas', isAuthenticated, async (req, res) => {
     try {
-        const dados = {
-            ...req.body,
-            utilizador_id: req.session.utilizador.id
-        };
+        req.body.utilizador_id = req.session.utilizador.id;
+        const receitaId = await Receita.create(req.body);
 
-        const receitaId = await Receita.create(dados);
-
-        if (req.body.ingredientes && Array.isArray(req.body.ingredientes)) {
-            for (const ing of req.body.ingredientes) {
+        // Adicionar ingredientes se existirem
+        if (req.body.ingredientes && req.body.ingredientes.length > 0) {
+            for (let i = 0; i < req.body.ingredientes.length; i++) {
+                const ing = req.body.ingredientes[i];
                 const ingredienteId = await Ingrediente.findOrCreate(ing.nome);
                 await Receita.addIngrediente(receitaId, ingredienteId, ing.quantidade);
             }

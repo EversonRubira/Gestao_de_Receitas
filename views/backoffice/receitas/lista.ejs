@@ -33,28 +33,28 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <% if (receitas && receitas.length > 0) { %>
-                            <% receitas.forEach(receita => { %>
+                        <% if (receitas.length > 0) { %>
+                            <% for (let i = 0; i < receitas.length; i++) { %>
                                 <tr>
-                                    <td><%= receita.id %></td>
-                                    <td><%= receita.nome %></td>
-                                    <td><%= receita.categoria_nome %></td>
+                                    <td><%= receitas[i].id %></td>
+                                    <td><%= receitas[i].nome %></td>
+                                    <td><%= receitas[i].categoria_nome %></td>
                                     <td>
-                                        <span class="badge badge-<%= receita.dificuldade_nivel.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() %>">
-                                            <%= receita.dificuldade_nivel %>
+                                        <span class="badge">
+                                            <%= receitas[i].dificuldade_nivel %>
                                         </span>
                                     </td>
-                                    <td><%= receita.tempo_preparacao %> min</td>
-                                    <td>€<%= parseFloat(receita.custo).toFixed(2) %></td>
+                                    <td><%= receitas[i].tempo_preparacao %> min</td>
+                                    <td>€<%= receitas[i].custo %></td>
                                     <td class="actions">
-                                        <a href="/receita/<%= receita.id %>" class="btn btn-small btn-info">Ver</a>
-                                        <a href="/backoffice/receitas/editar/<%= receita.id %>" class="btn btn-small btn-warning">Editar</a>
-                                        <form method="POST" action="/backoffice/receitas/eliminar/<%= receita.id %>" style="display:inline;" onsubmit="return confirm('Tem a certeza que deseja eliminar esta receita?')">
+                                        <a href="/receita/<%= receitas[i].id %>" class="btn btn-small btn-info">Ver</a>
+                                        <a href="/backoffice/receitas/editar/<%= receitas[i].id %>" class="btn btn-small btn-warning">Editar</a>
+                                        <form method="POST" action="/backoffice/receitas/eliminar/<%= receitas[i].id %>" style="display:inline;">
                                             <button type="submit" class="btn btn-small btn-danger">Eliminar</button>
                                         </form>
                                     </td>
                                 </tr>
-                            <% }) %>
+                            <% } %>
                         <% } else { %>
                             <tr>
                                 <td colspan="7" class="text-center">Nenhuma receita encontrada.</td>

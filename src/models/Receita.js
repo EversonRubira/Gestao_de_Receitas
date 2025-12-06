@@ -52,8 +52,8 @@ class Receita {
             dados.descricao_preparacao,
             dados.tempo_preparacao,
             dados.custo,
-            dados.porcoes || 1,
-            dados.imagem || null,
+            dados.porcoes,
+            dados.imagem,
             dados.categoria_id,
             dados.dificuldade_id,
             dados.utilizador_id
@@ -124,7 +124,7 @@ class Receita {
 
         if (termo) {
             query += ' AND (r.nome LIKE ? OR r.autor LIKE ? OR r.descricao_preparacao LIKE ?)';
-            const termoLike = `%${termo}%`;
+            const termoLike = '%' + termo + '%';
             params.push(termoLike, termoLike, termoLike);
         }
 
