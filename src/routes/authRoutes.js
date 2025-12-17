@@ -1,31 +1,48 @@
+// Importar módulos necessários
 const express = require('express');
 const router = express.Router();
+
+// Importar funções do model
 const Utilizador = require('../models/Utilizador');
+
+// Importar middleware
 const { redirectIfAuthenticated } = require('../middleware/auth');
 
-// Página de login
-router.get('/login', redirectIfAuthenticated, (req, res) => {
+// ========== PÁGINA DE LOGIN ==========
+// Mostrar formulário de login (só se não estiver logado)
+router.get('/login', redirectIfAuthenticated, function(req, res) {
     res.render('login', {
         title: 'Login',
         error: null
     });
 });
 
-// Processar login
-router.post('/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        console.log('Tentativa de login:', email);
+// Processar formulário de login
+router.post('/login', function(req, res) {
+    const email = req.body.email;
+    const password = req.body.password;
 
-        if (!email || !password) {
+    console.log('Tentativa de login:', email);
+
+    // Validar se os campos foram preenchidos
+    if (!email || !password) {
+        return res.render('login', {
+            title: 'Login',
+            error: 'Por favor, preencha todos os campos'
+        });
+    }
+
+    // Buscar utilizador na base de dados
+    Utilizador.buscarUtilizadorPorEmail(email, function(erro, utilizador) {
+        if (erro) {
+            console.error('Erro ao buscar utilizador:', erro);
             return res.render('login', {
                 title: 'Login',
-                error: 'Por favor, preencha todos os campos'
+                error: 'Erro ao processar login. Tente novamente.'
             });
         }
 
-        const utilizador = await Utilizador.findByEmail(email);
-
+        // Verificar se o utilizador existe
         if (!utilizador) {
             console.log('Utilizador não encontrado');
             return res.render('login', {
@@ -34,119 +51,142 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        const passwordValida = await Utilizador.verificarPassword(password, utilizador.password_hash);
+        // Verificar se a password está correta
+        Utilizador.verificarPassword(password, utilizador.password_hash, function(erro, passwordValida) {
+            if (erro) {
+                console.error('Erro ao verificar password:', erro);
+                return res.render('login', {
+                    title: 'Login',
+                    error: 'Erro ao processar login. Tente novamente.'
+                });
+            }
 
-        if (!passwordValida) {
-            console.log('Password inválida');
-            return res.render('login', {
-                title: 'Login',
-                error: 'Email ou password incorretos'
-            });
-        }
+            if (!passwordValida) {
+                console.log('Password inválida');
+                return res.render('login', {
+                    title: 'Login',
+                    error: 'Email ou password incorretos'
+                });
+            }
 
-        req.session.utilizador = {
-            id: utilizador.id,
-            nome: utilizador.nome,
-            email: utilizador.email,
-            tipo: utilizador.tipo
-        };
+            // Login com sucesso! Criar sessão
+            req.session.utilizador = {
+                id: utilizador.id,
+                nome: utilizador.nome,
+                email: utilizador.email,
+                tipo: utilizador.tipo
+            };
 
-        console.log('Login bem sucedido:', utilizador.nome);
+            console.log('Login bem sucedido:', utilizador.nome);
 
-        if (utilizador.tipo === 'admin') {
-            res.redirect('/backoffice');
-        } else {
-            res.redirect('/');
-        }
-
-    } catch (error) {
-        console.error('Erro no login:', error);
-        res.render('login', {
-            title: 'Login',
-            error: 'Erro ao processar login. Tente novamente.'
+            // Redirecionar conforme o tipo de utilizador
+            if (utilizador.tipo === 'admin') {
+                res.redirect('/backoffice');
+            } else {
+                res.redirect('/');
+            }
         });
-    }
+    });
 });
 
-// Página de registo
-router.get('/registo', redirectIfAuthenticated, (req, res) => {
+// ========== PÁGINA DE REGISTO ==========
+// Mostrar formulário de registo (só se não estiver logado)
+router.get('/registo', redirectIfAuthenticated, function(req, res) {
     res.render('registo', {
         title: 'Registo',
         error: null
     });
 });
 
-// Processar registo
-router.post('/registo', async (req, res) => {
-    try {
-        const { nome, email, password, password_confirm } = req.body;
+// Processar formulário de registo
+router.post('/registo', function(req, res) {
+    const nome = req.body.nome;
+    const email = req.body.email;
+    const password = req.body.password;
+    const passwordConfirm = req.body.password_confirm;
 
-        // Validar campos
-        if (!nome || !email || !password || !password_confirm) {
+    // Validar se todos os campos foram preenchidos
+    if (!nome || !email || !password || !passwordConfirm) {
+        return res.render('registo', {
+            title: 'Registo',
+            error: 'Por favor, preencha todos os campos'
+        });
+    }
+
+    // Verificar se as passwords coincidem
+    if (password !== passwordConfirm) {
+        return res.render('registo', {
+            title: 'Registo',
+            error: 'As passwords não coincidem'
+        });
+    }
+
+    // Verificar se a password tem comprimento mínimo
+    if (password.length < 6) {
+        return res.render('registo', {
+            title: 'Registo',
+            error: 'A password deve ter pelo menos 6 caracteres'
+        });
+    }
+
+    // Verificar se o email já existe
+    Utilizador.buscarUtilizadorPorEmail(email, function(erro, utilizadorExiste) {
+        if (erro) {
+            console.error('Erro ao verificar email:', erro);
             return res.render('registo', {
                 title: 'Registo',
-                error: 'Por favor, preencha todos os campos'
+                error: 'Erro ao processar registo. Tente novamente.'
             });
         }
 
-        if (password !== password_confirm) {
-            return res.render('registo', {
-                title: 'Registo',
-                error: 'As passwords não coincidem'
-            });
-        }
-
-        if (password.length < 6) {
-            return res.render('registo', {
-                title: 'Registo',
-                error: 'A password deve ter pelo menos 6 caracteres'
-            });
-        }
-
-        // Verificar se o email já existe
-        const existe = await Utilizador.findByEmail(email);
-        if (existe) {
+        if (utilizadorExiste) {
             return res.render('registo', {
                 title: 'Registo',
                 error: 'Este email já está registado'
             });
         }
 
-        // Criar utilizador
-        const utilizadorId = await Utilizador.create({
-            nome,
-            email,
-            password,
-            tipo: 'user'
-        });
-
-        // Criar sessão
-        req.session.utilizador = {
-            id: utilizadorId,
-            nome,
-            email,
+        // Criar o novo utilizador
+        const dadosUtilizador = {
+            nome: nome,
+            email: email,
+            password: password,
             tipo: 'user'
         };
 
-        res.redirect('/');
+        Utilizador.criarUtilizador(dadosUtilizador, function(erro, utilizadorId) {
+            if (erro) {
+                console.error('Erro ao criar utilizador:', erro);
+                return res.render('registo', {
+                    title: 'Registo',
+                    error: 'Erro ao processar registo. Tente novamente.'
+                });
+            }
 
-    } catch (error) {
-        console.error('Erro no registo:', error);
-        res.render('registo', {
-            title: 'Registo',
-            error: 'Erro ao processar registo. Tente novamente.'
+            // Registo com sucesso! Criar sessão
+            req.session.utilizador = {
+                id: utilizadorId,
+                nome: nome,
+                email: email,
+                tipo: 'user'
+            };
+
+            // Redirecionar para a página inicial
+            res.redirect('/');
         });
-    }
+    });
 });
 
-// Logout
-router.get('/logout', (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            console.error('Erro ao fazer logout:', err);
+// ========== LOGOUT ==========
+router.get('/logout', function(req, res) {
+    // Destruir a sessão
+    req.session.destroy(function(erro) {
+        if (erro) {
+            console.error('Erro ao fazer logout:', erro);
         }
         res.redirect('/login');
     });
 });
 
+// Exportar as rotas para serem usadas no servidor principal
 module.exports = router;

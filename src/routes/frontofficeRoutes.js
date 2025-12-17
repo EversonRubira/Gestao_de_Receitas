@@ -1,85 +1,140 @@
+// Importar módulos necessários
 const express = require('express');
 const router = express.Router();
+
+// Importar funções dos models
 const Receita = require('../models/Receita');
 const Categoria = require('../models/Categoria');
 
-// Página inicial - Lista de receitas
-router.get('/', async (req, res) => {
-    try {
-        const receitas = await Receita.findAll();
-        const categorias = await Categoria.findAll();
+// ========== PÁGINA INICIAL ==========
+// Mostrar lista de todas as receitas
+router.get('/', function(req, res) {
+    // Buscar todas as receitas
+    Receita.listarTodasReceitas(function(erro, receitas) {
+        if (erro) {
+            console.error('Erro ao carregar receitas:', erro);
+            return res.status(500).send('Erro ao carregar página');
+        }
 
-        res.render('frontoffice/index', {
-            title: 'Gestão de Receitas',
-            receitas,
-            categorias
+        // Buscar todas as categorias para o menu
+        Categoria.listarTodasCategorias(function(erro, categorias) {
+            if (erro) {
+                console.error('Erro ao carregar categorias:', erro);
+                return res.status(500).send('Erro ao carregar página');
+            }
+
+            // Mostrar a página inicial
+            res.render('frontoffice/index', {
+                title: 'Gestão de Receitas',
+                receitas: receitas,
+                categorias: categorias
+            });
         });
-    } catch (error) {
-        console.error('Erro ao carregar página inicial:', error);
-        res.status(500).send('Erro ao carregar página');
-    }
+    });
 });
 
-// Página de detalhes da receita
-router.get('/receita/:id', async (req, res) => {
-    try {
-        const receita = await Receita.findById(req.params.id);
+// ========== PÁGINA DE DETALHES DA RECEITA ==========
+router.get('/receita/:id', function(req, res) {
+    const receitaId = req.params.id;
 
+    // Buscar a receita pelo ID
+    Receita.buscarReceitaPorId(receitaId, function(erro, receita) {
+        if (erro) {
+            console.error('Erro ao carregar receita:', erro);
+            return res.status(500).send('Erro ao carregar receita');
+        }
+
+        // Verificar se a receita existe
         if (!receita) {
             return res.status(404).send('Receita não encontrada');
         }
 
-        const ingredientes = await Receita.getIngredientes(req.params.id);
+        // Buscar ingredientes da receita
+        Receita.buscarIngredientesReceita(receitaId, function(erro, ingredientes) {
+            if (erro) {
+                console.error('Erro ao carregar ingredientes:', erro);
+                return res.status(500).send('Erro ao carregar receita');
+            }
 
-        res.render('frontoffice/receita', {
-            title: receita.nome,
-            receita,
-            ingredientes
+            // Mostrar página de detalhes
+            res.render('frontoffice/receita', {
+                title: receita.nome,
+                receita: receita,
+                ingredientes: ingredientes
+            });
         });
-    } catch (error) {
-        console.error('Erro ao carregar receita:', error);
-        res.status(500).send('Erro ao carregar receita');
-    }
+    });
 });
 
-// Receitas por categoria
-router.get('/categoria/:id', async (req, res) => {
-    try {
-        const categoria = await Categoria.findById(req.params.id);
-        const receitas = await Receita.findByCategoria(req.params.id);
-        const categorias = await Categoria.findAll();
+// ========== RECEITAS POR CATEGORIA ==========
+router.get('/categoria/:id', function(req, res) {
+    const categoriaId = req.params.id;
 
-        res.render('frontoffice/categoria', {
-            title: `Receitas - ${categoria.nome}`,
-            categoria,
-            receitas,
-            categorias
+    // Buscar a categoria
+    Categoria.buscarCategoriaPorId(categoriaId, function(erro, categoria) {
+        if (erro) {
+            console.error('Erro ao carregar categoria:', erro);
+            return res.status(500).send('Erro ao carregar categoria');
+        }
+
+        // Buscar receitas desta categoria
+        Receita.buscarPorCategoria(categoriaId, function(erro, receitas) {
+            if (erro) {
+                console.error('Erro ao carregar receitas:', erro);
+                return res.status(500).send('Erro ao carregar categoria');
+            }
+
+            // Buscar todas as categorias para o menu
+            Categoria.listarTodasCategorias(function(erro, categorias) {
+                if (erro) {
+                    console.error('Erro ao carregar categorias:', erro);
+                    return res.status(500).send('Erro ao carregar categoria');
+                }
+
+                // Mostrar página da categoria
+                res.render('frontoffice/categoria', {
+                    title: 'Receitas - ' + categoria.nome,
+                    categoria: categoria,
+                    receitas: receitas,
+                    categorias: categorias
+                });
+            });
         });
-    } catch (error) {
-        console.error('Erro ao carregar categoria:', error);
-        res.status(500).send('Erro ao carregar categoria');
-    }
+    });
 });
 
-// Pesquisa de receitas
-router.get('/pesquisa', async (req, res) => {
-    try {
-        const { termo, categoria, dificuldade } = req.query;
-        const receitas = await Receita.search(termo, categoria, dificuldade);
-        const categorias = await Categoria.findAll();
+// ========== PESQUISA DE RECEITAS ==========
+router.get('/pesquisa', function(req, res) {
+    const termo = req.query.termo || '';
+    const categoriaId = req.query.categoria || null;
+    const dificuldadeId = req.query.dificuldade || null;
 
-        res.render('frontoffice/pesquisa', {
-            title: 'Pesquisa de Receitas',
-            receitas,
-            categorias,
-            termo: termo || '',
-            categoriaId: categoria || '',
-            dificuldadeId: dificuldade || ''
+    // Pesquisar receitas
+    Receita.pesquisarReceitas(termo, categoriaId, dificuldadeId, function(erro, receitas) {
+        if (erro) {
+            console.error('Erro na pesquisa:', erro);
+            return res.status(500).send('Erro na pesquisa');
+        }
+
+        // Buscar categorias para o menu
+        Categoria.listarTodasCategorias(function(erro, categorias) {
+            if (erro) {
+                console.error('Erro ao carregar categorias:', erro);
+                return res.status(500).send('Erro na pesquisa');
+            }
+
+            // Mostrar página de resultados
+            res.render('frontoffice/pesquisa', {
+                title: 'Pesquisa de Receitas',
+                receitas: receitas,
+                categorias: categorias,
+                termo: termo,
+                categoriaId: categoriaId || '',
+                dificuldadeId: dificuldadeId || ''
+            });
         });
-    } catch (error) {
-        console.error('Erro na pesquisa:', error);
-        res.status(500).send('Erro na pesquisa');
-    }
+    });
 });
 
+// Exportar as rotas para serem usadas no servidor principal
 module.exports = router;

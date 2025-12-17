@@ -1,78 +1,124 @@
+// Importar a conexão à base de dados e bcrypt para passwords
 const db = require('../config/database');
 const bcrypt = require('bcryptjs');
 
-class Utilizador {
-    // Buscar utilizador por email
-    static async findByEmail(email) {
-        const [rows] = await db.query(
-            'SELECT * FROM utilizadores WHERE email = ?',
-            [email]
-        );
-        return rows[0];
-    }
+// ========== FUNÇÕES PARA GERIR UTILIZADORES ==========
 
-    // Buscar utilizador por ID
-    static async findById(id) {
-        const [rows] = await db.query(
-            'SELECT id, nome, email, tipo, data_criacao FROM utilizadores WHERE id = ?',
-            [id]
-        );
-        return rows[0];
-    }
+// Função para buscar um utilizador pelo email
+function buscarUtilizadorPorEmail(email, callback) {
+    const sql = 'SELECT * FROM utilizadores WHERE email = ?';
 
-    // Criar novo utilizador
-    static async create(dados) {
-        const passwordHash = await bcrypt.hash(dados.password, 10);
+    db.query(sql, [email], function(erro, resultados) {
+        if (erro) {
+            return callback(erro, null);
+        }
+        callback(null, resultados[0]);
+    });
+}
 
-        const [result] = await db.query(`
-            INSERT INTO utilizadores (nome, email, password_hash, tipo)
-            VALUES (?, ?, ?, ?)
-        `, [
-            dados.nome,
-            dados.email,
-            passwordHash,
-            dados.tipo || 'user'
-        ]);
+// Função para buscar um utilizador pelo ID
+function buscarUtilizadorPorId(id, callback) {
+    const sql = 'SELECT id, nome, email, tipo, data_criacao FROM utilizadores WHERE id = ?';
 
-        return result.insertId;
-    }
+    db.query(sql, [id], function(erro, resultados) {
+        if (erro) {
+            return callback(erro, null);
+        }
+        callback(null, resultados[0]);
+    });
+}
 
-    // Verificar password
-    static async verificarPassword(password, hash) {
-        return await bcrypt.compare(password, hash);
-    }
-
-    // Listar todos os utilizadores
-    static async findAll() {
-        const [rows] = await db.query(
-            'SELECT id, nome, email, tipo, data_criacao FROM utilizadores ORDER BY data_criacao DESC'
-        );
-        return rows;
-    }
-
-    // Atualizar utilizador
-    static async update(id, dados) {
-        let query = 'UPDATE utilizadores SET nome = ?, email = ?, tipo = ?';
-        const params = [dados.nome, dados.email, dados.tipo];
-
-        if (dados.password) {
-            const passwordHash = await bcrypt.hash(dados.password, 10);
-            query += ', password_hash = ?';
-            params.push(passwordHash);
+// Função para criar um novo utilizador
+function criarUtilizador(dados, callback) {
+    // Primeiro, encriptar a password
+    bcrypt.hash(dados.password, 10, function(erro, passwordHash) {
+        if (erro) {
+            return callback(erro, null);
         }
 
-        query += ' WHERE id = ?';
-        params.push(id);
+        // Depois de encriptar, inserir na base de dados
+        const sql = 'INSERT INTO utilizadores (nome, email, password_hash, tipo) VALUES (?, ?, ?, ?)';
+        const tipo = dados.tipo || 'user'; // Se não especificado, tipo 'user'
 
-        const [result] = await db.query(query, params);
-        return result.affectedRows > 0;
-    }
+        db.query(sql, [dados.nome, dados.email, passwordHash, tipo], function(erro, resultado) {
+            if (erro) {
+                return callback(erro, null);
+            }
+            callback(null, resultado.insertId);
+        });
+    });
+}
 
-    // Eliminar utilizador
-    static async delete(id) {
-        const [result] = await db.query('DELETE FROM utilizadores WHERE id = ?', [id]);
-        return result.affectedRows > 0;
+// Função para verificar se a password está correta
+function verificarPassword(password, passwordHash, callback) {
+    bcrypt.compare(password, passwordHash, function(erro, estaCorreta) {
+        if (erro) {
+            return callback(erro, null);
+        }
+        callback(null, estaCorreta);
+    });
+}
+
+// Função para listar todos os utilizadores
+function listarTodosUtilizadores(callback) {
+    const sql = 'SELECT id, nome, email, tipo, data_criacao FROM utilizadores ORDER BY data_criacao DESC';
+
+    db.query(sql, function(erro, resultados) {
+        if (erro) {
+            return callback(erro, null);
+        }
+        callback(null, resultados);
+    });
+}
+
+// Função para atualizar um utilizador
+function atualizarUtilizador(id, dados, callback) {
+    // Se foi fornecida uma nova password, precisa ser encriptada
+    if (dados.password) {
+        bcrypt.hash(dados.password, 10, function(erro, passwordHash) {
+            if (erro) {
+                return callback(erro, null);
+            }
+
+            const sql = 'UPDATE utilizadores SET nome = ?, email = ?, tipo = ?, password_hash = ? WHERE id = ?';
+            db.query(sql, [dados.nome, dados.email, dados.tipo, passwordHash, id], function(erro, resultado) {
+                if (erro) {
+                    return callback(erro, null);
+                }
+                callback(null, resultado.affectedRows > 0);
+            });
+        });
+    } else {
+        // Se não há password nova, atualizar só os outros campos
+        const sql = 'UPDATE utilizadores SET nome = ?, email = ?, tipo = ? WHERE id = ?';
+        db.query(sql, [dados.nome, dados.email, dados.tipo, id], function(erro, resultado) {
+            if (erro) {
+                return callback(erro, null);
+            }
+            callback(null, resultado.affectedRows > 0);
+        });
     }
 }
 
-module.exports = Utilizador;
+// Função para eliminar um utilizador
+function eliminarUtilizador(id, callback) {
+    const sql = 'DELETE FROM utilizadores WHERE id = ?';
+
+    db.query(sql, [id], function(erro, resultado) {
+        if (erro) {
+            return callback(erro, null);
+        }
+        callback(null, resultado.affectedRows > 0);
+    });
+}
+
+// Exportar as funções para serem usadas noutros ficheiros
+module.exports = {
+    buscarUtilizadorPorEmail: buscarUtilizadorPorEmail,
+    buscarUtilizadorPorId: buscarUtilizadorPorId,
+    criarUtilizador: criarUtilizador,
+    verificarPassword: verificarPassword,
+    listarTodosUtilizadores: listarTodosUtilizadores,
+    atualizarUtilizador: atualizarUtilizador,
+    eliminarUtilizador: eliminarUtilizador
+};

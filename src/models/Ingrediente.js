@@ -1,56 +1,86 @@
+// Importar a conexão à base de dados
 const db = require('../config/database');
 
-class Ingrediente {
-    // Listar todos os ingredientes
-    static async findAll() {
-        const [rows] = await db.query('SELECT * FROM ingredientes ORDER BY nome');
-        return rows;
-    }
+// ========== FUNÇÕES PARA GERIR INGREDIENTES ==========
 
-    // Buscar ingrediente por ID
-    static async findById(id) {
-        const [rows] = await db.query('SELECT * FROM ingredientes WHERE id = ?', [id]);
-        return rows[0];
-    }
+// Função para listar todos os ingredientes
+function listarTodosIngredientes(callback) {
+    const sql = 'SELECT * FROM ingredientes ORDER BY nome';
 
-    // Buscar ingrediente por nome
-    static async findByNome(nome) {
-        const [rows] = await db.query('SELECT * FROM ingredientes WHERE nome = ?', [nome]);
-        return rows[0];
-    }
-
-    // Criar novo ingrediente
-    static async create(nome) {
-        const [result] = await db.query(
-            'INSERT INTO ingredientes (nome) VALUES (?)',
-            [nome]
-        );
-        return result.insertId;
-    }
-
-    // Atualizar ingrediente
-    static async update(id, nome) {
-        const [result] = await db.query(
-            'UPDATE ingredientes SET nome = ? WHERE id = ?',
-            [nome, id]
-        );
-        return result.affectedRows > 0;
-    }
-
-    // Eliminar ingrediente
-    static async delete(id) {
-        const [result] = await db.query('DELETE FROM ingredientes WHERE id = ?', [id]);
-        return result.affectedRows > 0;
-    }
-
-    // Buscar ou criar ingrediente
-    static async findOrCreate(nome) {
-        const existe = await this.findByNome(nome);
-        if (existe) {
-            return existe.id;
+    db.query(sql, function(erro, resultados) {
+        if (erro) {
+            return callback(erro, null);
         }
-        return await this.create(nome);
-    }
+        callback(null, resultados);
+    });
 }
 
-module.exports = Ingrediente;
+// Função para buscar um ingrediente pelo ID
+function buscarIngredientePorId(id, callback) {
+    const sql = 'SELECT * FROM ingredientes WHERE id = ?';
+
+    db.query(sql, [id], function(erro, resultados) {
+        if (erro) {
+            return callback(erro, null);
+        }
+        callback(null, resultados[0]);
+    });
+}
+
+// Função para buscar um ingrediente pelo nome
+function buscarIngredientePorNome(nome, callback) {
+    const sql = 'SELECT * FROM ingredientes WHERE nome = ?';
+
+    db.query(sql, [nome], function(erro, resultados) {
+        if (erro) {
+            return callback(erro, null);
+        }
+        callback(null, resultados[0]);
+    });
+}
+
+// Função para criar um novo ingrediente
+function criarIngrediente(nome, callback) {
+    const sql = 'INSERT INTO ingredientes (nome) VALUES (?)';
+
+    db.query(sql, [nome], function(erro, resultado) {
+        if (erro) {
+            return callback(erro, null);
+        }
+        callback(null, resultado.insertId);
+    });
+}
+
+// Função para atualizar um ingrediente
+function atualizarIngrediente(id, nome, callback) {
+    const sql = 'UPDATE ingredientes SET nome = ? WHERE id = ?';
+
+    db.query(sql, [nome, id], function(erro, resultado) {
+        if (erro) {
+            return callback(erro, null);
+        }
+        callback(null, resultado.affectedRows > 0);
+    });
+}
+
+// Função para eliminar um ingrediente
+function eliminarIngrediente(id, callback) {
+    const sql = 'DELETE FROM ingredientes WHERE id = ?';
+
+    db.query(sql, [id], function(erro, resultado) {
+        if (erro) {
+            return callback(erro, null);
+        }
+        callback(null, resultado.affectedRows > 0);
+    });
+}
+
+// Exportar as funções para serem usadas noutros ficheiros
+module.exports = {
+    listarTodosIngredientes: listarTodosIngredientes,
+    buscarIngredientePorId: buscarIngredientePorId,
+    buscarIngredientePorNome: buscarIngredientePorNome,
+    criarIngrediente: criarIngrediente,
+    atualizarIngrediente: atualizarIngrediente,
+    eliminarIngrediente: eliminarIngrediente
+};

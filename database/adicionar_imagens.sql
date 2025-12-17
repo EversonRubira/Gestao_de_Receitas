@@ -1,6 +1,6 @@
 -- Script para adicionar imagens às receitas existentes
 -- Projeto PIS 2025/2026
--- IMAGENS GRATUITAS de Unsplash/Pexels (sem copyright)
+
 
 USE gestao_receitas;
 

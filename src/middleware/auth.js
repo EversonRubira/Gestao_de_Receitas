@@ -1,47 +1,46 @@
-// Middleware de autenticação
+// Ficheiro com funções de autenticação
+// Estas funções verificam se o utilizador tem permissão para aceder a certas páginas
 
-// Verifica se o utilizador está logado
-const isAuthenticated = (req, res, next) => {
+// Função que verifica se o utilizador está logado
+function isAuthenticated(req, res, next) {
+    // Verifica se existe uma sessão e se tem dados do utilizador
     if (req.session && req.session.utilizador) {
-        return next();
+        // Se estiver logado, permite continuar
+        next();
+    } else {
+        // Se não estiver logado, redireciona para a página de login
+        res.redirect('/login');
     }
+}
 
-    if (req.path.startsWith('/api/')) {
-        return res.status(401).json({
-            success: false,
-            message: 'Não autenticado'
-        });
-    }
-
-    res.redirect('/login');
-};
-
-// Verifica se é administrador
-const isAdmin = (req, res, next) => {
+// Função que verifica se o utilizador é administrador
+function isAdmin(req, res, next) {
+    // Verifica se está logado E se é admin
     if (req.session && req.session.utilizador && req.session.utilizador.tipo === 'admin') {
-        return next();
+        // Se for admin, permite continuar
+        next();
+    } else {
+        // Se não for admin, redireciona para a página inicial
+        res.redirect('/');
     }
+}
 
-    if (req.path.startsWith('/api/')) {
-        return res.status(403).json({
-            success: false,
-            message: 'Acesso negado'
-        });
-    }
-
-    res.redirect('/');
-};
-
-
-const redirectIfAuthenticated = (req, res, next) => {
+// Função que redireciona utilizadores já autenticados
+// Útil para páginas de login/registo
+function redirectIfAuthenticated(req, res, next) {
+    // Se já estiver logado
     if (req.session && req.session.utilizador) {
-        return res.redirect('/');
+        // Redireciona para a página inicial
+        res.redirect('/');
+    } else {
+        // Se não estiver logado, permite continuar (mostrar login)
+        next();
     }
-    next();
-};
+}
 
+// Exportar as funções para serem usadas nas rotas
 module.exports = {
-    isAuthenticated,
-    isAdmin,
-    redirectIfAuthenticated
+    isAuthenticated: isAuthenticated,
+    isAdmin: isAdmin,
+    redirectIfAuthenticated: redirectIfAuthenticated
 };

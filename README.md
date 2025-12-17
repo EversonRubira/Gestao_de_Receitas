@@ -26,10 +26,6 @@ mysql -u root -p < database/schema.sql
 npm start
 ```
 
-## Credenciais
-
-Ver ficheiro CREDENCIAIS_do_PROJETO_FINAL.txt
-
 ## Funcionalidades
 
 - CRUD de receitas

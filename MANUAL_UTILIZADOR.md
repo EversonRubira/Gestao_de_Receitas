@@ -1,167 +1,152 @@
 # Manual do Utilizador
-Sistema de Gestão de Receitas - Projeto PIS 2025/2026
 
----
+Sistema de Gestao de Receitas - Projeto PIS 2025/2026
 
-## 1. Como Aceder ao Sistema
+## 1. Como Aceder
 
-### Criar uma conta nova
+### Criar conta
 
 1. Ir a `http://localhost:3000/registo`
-2. Preencher os dados:
+2. Preencher:
    - Nome
    - Email
-   - Password (no mínimo 6 caracteres)
+   - Password (minimo 6 caracteres)
    - Confirmar password
-3. Clicar em "Registar"
+3. Clicar "Registar"
 
-Depois de registar, já fica automaticamente com login feito.
-
-### Fazer Login
+### Fazer login
 
 1. Ir a `http://localhost:3000/login`
-2. Meter o email e password
-3. Clicar em "Entrar"
+2. Escrever email e password
+3. Clicar "Entrar"
 
-**Contas que já existem:**
+**Contas pre-criadas:**
 
-Administrador:
+Admin:
 - Email: admin@receitas.pt
 - Password: admin123
 
-Utilizador normal:
+User normal:
 - Email: joao@exemplo.pt
 - Password: password123
 
 ### Sair
 
-Clicar no botão "Sair" no menu.
+Clicar "Sair" no menu.
 
----
+## 2. Area Publica
 
-## 2. Área Pública (Frontoffice)
+### Pagina inicial
 
-### Página Inicial
-
-Quando se abre `http://localhost:3000` aparece:
-- Lista com todas as receitas
-- Menu com as categorias
+Aceder `http://localhost:3000` para ver:
+- Lista de receitas
+- Menu de categorias
 - Barra de pesquisa
-- Filtros
 
-### Pesquisar Receitas
+### Pesquisar
 
-Pode pesquisar de várias formas:
-- Escrever no campo de pesquisa (pesquisa por nome, autor ou descrição)
-- Escolher uma categoria no menu
-- Filtrar por dificuldade (Fácil, Médio, Difícil)
+Pode pesquisar por:
+- Nome, autor ou descricao (no campo de pesquisa)
+- Categoria (no menu)
+- Dificuldade (Facil, Medio, Dificil)
 
-### Ver uma Receita
+### Ver receita
 
-Clicar em "Ver Receita" para ver os detalhes:
-- Foto da receita
-- Categoria, dificuldade, tempo e custo
-- Lista de ingredientes
-- Como preparar (passo a passo)
-- Avaliações
+Clicar "Ver Receita" para ver:
+- Foto
+- Informacoes (categoria, dificuldade, tempo, custo, porcoes)
+- Ingredientes
+- Modo de preparacao
+- Avaliacoes
 
-### Ver Receitas por Categoria
+### Ver por categoria
 
-Clicar numa categoria (por exemplo "Sobremesas") para ver só as receitas dessa categoria.
+Clicar numa categoria para ver so receitas dessa categoria.
 
----
+## 3. Area de Administracao
 
-## 3. Área de Administração (Backoffice)
+So admin pode aceder.
 
-**Atenção:** Só quem tiver conta de administrador pode aceder!
-
-### Entrar no Backoffice
+### Entrar no backoffice
 
 1. Fazer login com conta admin
 2. Ir a `http://localhost:3000/backoffice`
-3. Ou clicar em "Backoffice" no menu
 
 ### Dashboard
 
-Mostra estatísticas:
-- Quantas receitas existem
-- Quantos utilizadores
-- Quantas categorias
-- Quantos ingredientes
+Mostra:
+- Total de receitas
+- Total de utilizadores
+- Total de categorias
+- Total de ingredientes
 
-### Gerir Receitas
+### Gerir receitas
 
-**Listar receitas:**
-- Menu lateral → "Receitas"
-- Aparece uma tabela com todas as receitas
-- Pode ver, editar ou apagar
+**Listar:**
+- Menu: "Receitas"
+- Mostra tabela com todas
 
-**Criar receita nova:**
-1. Clicar em "Nova Receita"
-2. Preencher o formulário:
-   - Nome da receita
+**Criar:**
+1. Clicar "Nova Receita"
+2. Preencher:
+   - Nome
    - Autor
    - Categoria
    - Dificuldade
-   - Tempo (em minutos)
-   - Custo (em euros)
-   - Porções
-   - Modo de preparação
+   - Tempo (minutos)
+   - Custo (euros)
+   - Porcoes
+   - Modo de preparacao
    - Foto (opcional)
    - Ingredientes
-3. Clicar em "Guardar"
+3. Clicar "Guardar"
 
-**Editar receita:**
-1. Clicar em "Editar" na receita que quer mudar
-2. Alterar o que quiser
-3. Clicar em "Atualizar"
+**Editar:**
+1. Clicar "Editar"
+2. Mudar o que quiser
+3. Clicar "Atualizar"
 
-**Apagar receita:**
-1. Clicar em "Eliminar"
+**Apagar:**
+1. Clicar "Eliminar"
 2. Confirmar
 
-⚠️ Atenção: Quando se apaga uma receita, não dá para recuperar!
+### Gerir categorias
 
-### Gerir Categorias
+**Ver:**
+- Menu: "Categorias"
 
-**Ver categorias:**
-- Menu lateral → "Categorias"
-
-**Criar categoria:**
-1. Clicar em "Nova Categoria"
-2. Escrever o nome e descrição
+**Criar:**
+1. Clicar "Nova Categoria"
+2. Escrever nome e descricao
 3. Guardar
 
-**Importante:** Não se pode apagar categorias que tenham receitas.
+Nao pode apagar categorias com receitas.
 
-### Gerir Ingredientes
+### Gerir ingredientes
 
-**Ver ingredientes:**
-- Menu lateral → "Ingredientes"
+**Ver:**
+- Menu: "Ingredientes"
 
-**Adicionar ingrediente:**
-1. Clicar em "Novo Ingrediente"
-2. Escrever o nome
+**Adicionar:**
+1. Clicar "Novo Ingrediente"
+2. Escrever nome
 3. Guardar
 
----
+## 4. Problemas
 
-## 4. Problemas Comuns
+### Nao consigo fazer login
 
-### Não consigo fazer login
-- Verificar se o email e password estão corretos
-- Confirmar que a conta foi criada
+- Verificar email e password
+- Confirmar que conta foi criada
 
-### A imagem não aparece
-- Verificar se o ficheiro foi carregado
-- Só aceita JPG e PNG
-- Tamanho máximo: 5MB
+### Imagem nao aparece
+
+- Verificar se ficheiro foi carregado
+- So aceita JPG e PNG
+- Max 5MB
 
 ### Erro ao criar receita
-- Preencher todos os campos obrigatórios
-- Verificar se escolheu a categoria e dificuldade
-- Confirmar que adicionou ingredientes
 
----
-
-**Projeto PIS 2025/2026 - CTeSP TPSI**
+- Preencher todos os campos
+- Escolher categoria e dificuldade
+- Adicionar pelo menos um ingrediente

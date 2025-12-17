@@ -1,88 +1,81 @@
-# Manual Técnico
-Sistema de Gestão de Receitas - Projeto PIS 2025/2026
+# Manual Tecnico
 
----
+Sistema de Gestao de Receitas - Projeto PIS 2025/2026
 
-## 1. Tecnologias Usadas
+## 1. Tecnologias
 
 **Backend:**
 - Node.js (v14+)
 - Express.js (v4.18.2)
 - MySQL (v5.7+)
 
-**Autenticação:**
+**Autenticacao:**
 - express-session
-- bcryptjs (para encriptar passwords)
+- bcryptjs
 
 **Outros:**
 - EJS (templates)
 - body-parser
-- multer (upload de ficheiros)
-- axios (para chamar APIs externas)
-- dotenv (variáveis de ambiente)
-
----
+- express-fileupload (upload de ficheiros)
+- axios (APIs externas)
+- dotenv (variaveis de ambiente)
 
 ## 2. Estrutura do Projeto
 
 ```
 Projeto/
 ├── database/
-│   ├── schema.sql              # Base de dados
+│   ├── schema.sql
 │   └── adicionar_imagens.sql
 │
-├── public/                     # Ficheiros públicos (CSS, JS, imagens)
+├── public/
 │   ├── css/
 │   ├── js/
 │   └── uploads/
 │
 ├── src/
 │   ├── config/
-│   │   ├── database.js         # Ligação ao MySQL
-│   │   └── multer.js           # Configuração de uploads
+│   │   ├── database.js
+│   │   └── upload.js
 │   │
 │   ├── middleware/
-│   │   └── auth.js             # Verificar se está logado
+│   │   └── auth.js
 │   │
-│   ├── models/                 # Modelos (ligam ao MySQL)
+│   ├── models/
 │   │   ├── Receita.js
 │   │   ├── Utilizador.js
 │   │   ├── Categoria.js
 │   │   └── Ingrediente.js
 │   │
-│   └── routes/                 # Rotas da aplicação
+│   └── routes/
 │       ├── apiRoutes.js
 │       ├── authRoutes.js
 │       ├── backofficeRoutes.js
 │       └── frontofficeRoutes.js
 │
-├── views/                      # Templates EJS
+├── views/
 │   ├── backoffice/
 │   ├── frontoffice/
 │   └── partials/
 │
-├── .env                        # Configurações (não meter no git!)
+├── .env
 ├── package.json
-└── server.js                   # Ficheiro principal
+└── server.js
 ```
-
----
 
 ## 3. Base de Dados
 
 ### Tabelas
 
-O sistema tem 7 tabelas:
-
-1. **utilizadores** - Dados dos users (admin ou user normal)
-2. **receitas** - Informação das receitas
-3. **categorias** - Ex: Sopas, Sobremesas, etc.
-4. **dificuldades** - Fácil, Médio, Difícil
+1. **utilizadores** - Admin ou user normal
+2. **receitas** - Informacao das receitas
+3. **categorias** - Sopas, Sobremesas, etc
+4. **dificuldades** - Facil, Medio, Dificil
 5. **ingredientes** - Lista de ingredientes
 6. **receita_ingredientes** - Liga receitas a ingredientes
-7. **avaliacoes** - Classificações (1-5 estrelas)
+7. **avaliacoes** - Classificacoes 1-5 estrelas
 
-### Tabela receitas (principal)
+### Tabela receitas
 
 ```sql
 CREATE TABLE receitas (
@@ -97,98 +90,81 @@ CREATE TABLE receitas (
     categoria_id INT NOT NULL,
     dificuldade_id INT NOT NULL,
     utilizador_id INT NOT NULL,
-    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
-
-**Relações:**
-- `categoria_id` liga à tabela categorias
-- `dificuldade_id` liga à tabela dificuldades
-- `utilizador_id` liga à tabela utilizadores
-
-### Configuração da BD
-
-- **Charset:** UTF-8 (utf8mb4_unicode_ci) para aceitar acentos
-- **Engine:** InnoDB (suporta foreign keys)
-
----
 
 ## 4. API REST
 
 **URL base:** `http://localhost:3000/api`
 
-### Endpoints de Receitas
+### Autenticacao
 
-**Listar receitas:**
 ```
-GET /api/receitas
-```
-Pode filtrar com: `?termo=frango&categoria=3`
-
-**Ver receita:**
-```
-GET /api/receitas/:id
+POST /api/auth/login            Login (devolve token JWT)
 ```
 
-**Criar receita:**
+**Exemplo:**
+```json
+POST /api/auth/login
+Body: {
+  "email": "admin@receitas.pt",
+  "password": "admin123"
+}
+
+Resposta: {
+  "success": true,
+  "token": "eyJhbGc...",
+  "utilizador": {...}
+}
 ```
-POST /api/receitas
-Body (JSON):
+
+### Receitas
+
+```
+GET  /api/receitas              Listar (pode filtrar)
+GET  /api/receitas/:id          Ver uma
+POST /api/receitas              Criar (precisa token JWT)
+PUT  /api/receitas/:id          Atualizar (precisa token JWT)
+DELETE /api/receitas/:id        Apagar (precisa token JWT)
+```
+
+Exemplo criar receita:
+```json
 {
-  "nome": "...",
-  "autor": "...",
+  "nome": "Arroz de Tomate",
+  "autor": "Maria",
   "descricao_preparacao": "...",
   "tempo_preparacao": 30,
-  "custo": 10.50,
+  "custo": 5.50,
+  "porcoes": 4,
   "categoria_id": 3,
   "dificuldade_id": 1
 }
 ```
-⚠️ Precisa de estar logado!
 
-**Atualizar receita:**
-```
-PUT /api/receitas/:id
-```
-
-**Apagar receita:**
-```
-DELETE /api/receitas/:id
-```
-
-### Outros Endpoints
+### Outras
 
 ```
-GET /api/categorias      # Listar categorias
-GET /api/ingredientes    # Listar ingredientes
+GET /api/categorias
+GET /api/ingredientes
+GET /api/external/random
+GET /api/external/search/:termo
 ```
 
-### API Externa (TheMealDB)
+## 5. Autenticacao
 
-```
-GET /api/external/random           # Receita aleatória
-GET /api/external/search/:termo    # Pesquisar receitas
-```
+Sistema usa dois metodos:
 
-**Exemplo:**
-```
-http://localhost:3000/api/external/search/chicken
-```
+### Sessions (Web e Backoffice)
 
----
+Para utilizadores que navegam no browser.
 
-## 5. Autenticação
-
-### Como funciona
-
-O sistema usa **sessions** para guardar o login do utilizador.
-
-Quando alguém faz login, os dados ficam guardados na sessão:
+Quando o user faz login:
 ```javascript
 req.session.utilizador = {
     id: 1,
-    nome: "João",
+    nome: "Joao",
     email: "joao@exemplo.pt",
     tipo: "admin"
 };
@@ -196,255 +172,215 @@ req.session.utilizador = {
 
 ### Middlewares
 
-**isAuthenticated** - Verifica se está logado
+**isAuthenticated** - Verifica se esta logado
 ```javascript
-router.get('/perfil', isAuthenticated, (req, res) => {
-    // Só entra se estiver logado
+router.get('/perfil', isAuthenticated, function(req, res) {
+    // codigo
 });
 ```
 
-**isAdmin** - Verifica se é admin
+**isAdmin** - Verifica se e admin
 ```javascript
 router.use('/backoffice', isAdmin);
 ```
 
+### JWT (API)
+
+Para pedidos a API REST.
+
+**protegerRotaAPI** - Verifica token JWT
+```javascript
+router.post('/api/receitas', protegerRotaAPI, function(req, res) {
+    // req.utilizador tem os dados do token
+});
+```
+
+**Como usar:**
+1. Fazer login: POST /api/auth/login
+2. Guardar o token recebido
+3. Enviar em cada pedido: `Authorization: Bearer TOKEN`
+
+**Exemplo:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+Token expira em 24 horas.
+
+Ver ficheiro TESTE_API_JWT.md para mais detalhes.
+
 ### Passwords
 
-As passwords são encriptadas com **bcrypt** antes de guardar na BD.
+Passwords sao encriptadas com bcrypt:
 
 ```javascript
 // Encriptar
-const hash = await bcrypt.hash(password, 10);
+bcrypt.hash(password, 10, function(erro, hash) {
+    // guardar hash
+});
 
 // Verificar
-const valida = await bcrypt.compare(password, hash);
+bcrypt.compare(password, hash, function(erro, correto) {
+    // correto = true ou false
+});
 ```
-
-### Segurança
-
-✅ Passwords encriptadas
-✅ Queries com prepared statements (previne SQL injection)
-✅ Sessions com secret key
-✅ Validação de dados
-
----
 
 ## 6. Models
 
-Os models fazem a ponte entre o código e a base de dados.
+### Receita.js
 
-### Model Receita
+Funcoes principais:
+- `listarTodasReceitas(callback)`
+- `buscarReceitaPorId(id, callback)`
+- `criarReceita(dados, callback)`
+- `atualizarReceita(id, dados, callback)`
+- `eliminarReceita(id, callback)`
+- `buscarIngredientesReceita(id, callback)`
 
-**Ficheiro:** `src/models/Receita.js`
+### Utilizador.js
 
-Principais funções:
-- `findAll()` - Listar todas
-- `findById(id)` - Buscar por ID
-- `search(termo, categoria, dificuldade)` - Pesquisar
-- `create(dados)` - Criar nova
-- `update(id, dados)` - Atualizar
-- `delete(id)` - Apagar
-- `getIngredientes(receitaId)` - Ver ingredientes
-
-### Model Utilizador
-
-**Ficheiro:** `src/models/Utilizador.js`
-
-- `findByEmail(email)` - Buscar por email
-- `create(dados)` - Criar user (encripta password automaticamente)
-- `verificarPassword(password, hash)` - Verificar password
-
----
+- `buscarUtilizadorPorEmail(email, callback)`
+- `criarUtilizador(dados, callback)`
+- `verificarPassword(password, hash, callback)`
 
 ## 7. Rotas
 
-### Rotas de Login/Registo
-
-**Ficheiro:** `src/routes/authRoutes.js`
+### Login/Registo (authRoutes.js)
 
 ```
-GET  /login       # Página de login
-POST /login       # Processar login
-GET  /registo     # Página de registo
-POST /registo     # Criar conta
-GET  /logout      # Sair
+GET  /login
+POST /login
+GET  /registo
+POST /registo
+GET  /logout
 ```
 
-### Rotas Públicas (Frontoffice)
-
-**Ficheiro:** `src/routes/frontofficeRoutes.js`
+### Publicas (frontofficeRoutes.js)
 
 ```
-GET /                  # Página inicial
-GET /receita/:id       # Ver receita
-GET /categoria/:id     # Ver categoria
-GET /pesquisa          # Pesquisar
+GET /
+GET /receita/:id
+GET /categoria/:id
+GET /pesquisa
 ```
 
-### Rotas Admin (Backoffice)
+### Admin (backofficeRoutes.js)
 
-**Ficheiro:** `src/routes/backofficeRoutes.js`
-
-Todas precisam de login de admin!
+Todas precisam de login admin:
 
 ```
-GET  /backoffice                      # Dashboard
-GET  /backoffice/receitas             # Listar
-GET  /backoffice/receitas/nova        # Criar
-POST /backoffice/receitas/nova        # Guardar
-GET  /backoffice/receitas/editar/:id  # Editar
-POST /backoffice/receitas/editar/:id  # Atualizar
-POST /backoffice/receitas/eliminar/:id # Apagar
+GET  /backoffice
+GET  /backoffice/receitas
+GET  /backoffice/receitas/nova
+POST /backoffice/receitas/nova
+GET  /backoffice/receitas/editar/:id
+POST /backoffice/receitas/editar/:id
+POST /backoffice/receitas/eliminar/:id
 ```
 
----
+## 8. Configuracao
 
-## 8. Configuração
+### .env
 
-### Variáveis de Ambiente (.env)
-
-```env
+```
 PORT=3000
-NODE_ENV=development
-
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=root
 DB_NAME=gestao_receitas
 DB_PORT=3306
-
-SESSION_SECRET=minha_chave_secreta
+SESSION_SECRET=chave_secreta
 ```
 
-### Ligação ao MySQL
+### database.js
 
-**Ficheiro:** `src/config/database.js`
-
-Usa um **pool de conexões** para reutilizar ligações ao MySQL:
+Usa conexao simples ao MySQL:
 
 ```javascript
-const pool = mysql.createPool({
+const connection = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    connectionLimit: 10,
-    charset: 'utf8mb4'
+    port: process.env.DB_PORT || 3306
 });
 ```
 
-### Upload de Ficheiros
+### upload.js
 
-**Ficheiro:** `src/config/multer.js`
-
-Configuração para upload de imagens:
+Upload de imagens:
 - Pasta: `public/uploads/receitas/`
-- Tamanho máximo: 5MB
-- Formatos aceites: JPG, PNG, GIF
-
----
+- Tamanho max: 5MB
+- Tipos: JPG, PNG, GIF
 
 ## 9. Como Instalar
 
-### Passo 1: Instalar dependências
+### 1. Instalar dependencias
 
 ```bash
 npm install
 ```
 
-### Passo 2: Configurar .env
+### 2. Configurar .env
 
-Copiar `.env.example` para `.env` e preencher os dados.
+Copiar `.env.example` para `.env` e preencher.
 
-### Passo 3: Criar base de dados
+### 3. Criar base de dados
 
 ```bash
 mysql -u root -p < database/schema.sql
 ```
 
-### Passo 4: Iniciar servidor
+### 4. Iniciar servidor
 
 ```bash
 npm start
 ```
 
-Para desenvolvimento (auto-reload):
+Ou com auto-reload:
 ```bash
 npm run dev
 ```
 
-### Passo 5: Testar
+### 5. Testar
 
-Abrir no browser: `http://localhost:3000`
+Abrir: `http://localhost:3000`
 
----
+## 10. Problemas Comuns
 
-## 10. Testar a API
+### Porta 3000 ocupada
 
-### Com cURL
-
-**Listar receitas:**
-```bash
-curl http://localhost:3000/api/receitas
-```
-
-**Ver receita específica:**
-```bash
-curl http://localhost:3000/api/receitas/1
-```
-
-**Pesquisar:**
-```bash
-curl http://localhost:3000/api/receitas?termo=frango
-```
-
-### Com Postman
-
-Importar os endpoints e testar.
-
----
-
-## 11. Problemas Comuns
-
-### Porta 3000 já está em uso
-
-**Windows:**
+Windows:
 ```bash
 netstat -ano | findstr :3000
-taskkill /F /PID <numero_que_apareceu>
+taskkill //F //PID <numero>
 ```
 
-**Linux/Mac:**
+Linux/Mac:
 ```bash
 lsof -ti:3000 | xargs kill -9
 ```
 
-### Erro ao ligar ao MySQL
+### Erro MySQL
 
-- Verificar se o MySQL está a correr
-- Confirmar dados no `.env`
+- Verificar se MySQL esta a correr
+- Confirmar dados no .env
 - Testar: `mysql -u root -p`
 
-### Módulos em falta
+### Modulos em falta
 
 ```bash
 npm install
 ```
 
----
+## 11. Backup
 
-## 12. Backup da Base de Dados
-
-**Criar backup:**
+Criar backup:
 ```bash
 mysqldump -u root -p gestao_receitas > backup.sql
 ```
 
-**Restaurar:**
+Restaurar:
 ```bash
 mysql -u root -p gestao_receitas < backup.sql
 ```
-
----
-
-**Projeto PIS 2025/2026 - CTeSP TPSI**

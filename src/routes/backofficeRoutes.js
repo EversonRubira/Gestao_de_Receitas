@@ -1,218 +1,338 @@
+// Importar módulos necessários
 const express = require('express');
 const router = express.Router();
+
+// Importar middleware de autenticação
 const { isAuthenticated, isAdmin } = require('../middleware/auth');
+
+// Importar funções dos models
 const Receita = require('../models/Receita');
 const Categoria = require('../models/Categoria');
 const Ingrediente = require('../models/Ingrediente');
-const db = require('../config/database');
-const upload = require('../config/multer');
 
-// Todas as rotas do backoffice requerem autenticação de admin
+// Importar conexão à base de dados
+const db = require('../config/database');
+
+// Importar função de upload
+const upload = require('../config/upload');
+
+// ========== PROTEÇÃO DE ROTAS ==========
+// Todas as páginas do backoffice precisam de login E ser admin
 router.use(isAuthenticated);
 router.use(isAdmin);
 
-// Dashboard do backoffice
-router.get('/', async (req, res) => {
-    try {
-        const [[stats]] = await db.query(`
-            SELECT
-                (SELECT COUNT(*) FROM receitas) as total_receitas,
-                (SELECT COUNT(*) FROM utilizadores) as total_utilizadores,
-                (SELECT COUNT(*) FROM categorias) as total_categorias,
-                (SELECT COUNT(*) FROM ingredientes) as total_ingredientes
-        `);
+// ========== PÁGINA PRINCIPAL DO BACKOFFICE (DASHBOARD) ==========
+router.get('/', function(req, res) {
+    // Query SQL para contar totais
+    const sql = `
+        SELECT
+            (SELECT COUNT(*) FROM receitas) as total_receitas,
+            (SELECT COUNT(*) FROM utilizadores) as total_utilizadores,
+            (SELECT COUNT(*) FROM categorias) as total_categorias,
+            (SELECT COUNT(*) FROM ingredientes) as total_ingredientes
+    `;
 
+    db.query(sql, function(erro, resultados) {
+        if (erro) {
+            console.error('Erro ao carregar dashboard:', erro);
+            return res.status(500).send('Erro ao carregar dashboard');
+        }
+
+        // Renderizar a página do dashboard
         res.render('backoffice/dashboard', {
             title: 'Backoffice - Dashboard',
-            stats
+            stats: resultados[0]
         });
-    } catch (error) {
-        console.error('Erro ao carregar dashboard:', error);
-        res.status(500).send('Erro ao carregar dashboard');
-    }
+    });
 });
 
 // ========== GESTÃO DE RECEITAS ==========
 
-// Listar receitas
-router.get('/receitas', async (req, res) => {
-    try {
-        const receitas = await Receita.findAll();
+// Página que lista todas as receitas
+router.get('/receitas', function(req, res) {
+    // Chamar função para listar receitas
+    Receita.listarTodasReceitas(function(erro, receitas) {
+        if (erro) {
+            console.error('Erro ao listar receitas:', erro);
+            return res.status(500).send('Erro ao listar receitas');
+        }
+
+        // Mostrar a página com a lista de receitas
         res.render('backoffice/receitas/lista', {
             title: 'Gestão de Receitas',
-            receitas
+            receitas: receitas
         });
-    } catch (error) {
-        console.error('Erro ao listar receitas:', error);
-        res.status(500).send('Erro ao listar receitas');
-    }
+    });
 });
 
-// Formulário de nova receita
-router.get('/receitas/nova', async (req, res) => {
-    try {
-        const categorias = await Categoria.findAll();
-        const [dificuldades] = await db.query('SELECT * FROM dificuldades ORDER BY ordem');
-        const ingredientes = await Ingrediente.findAll();
+// Página do formulário para criar uma nova receita
+router.get('/receitas/nova', function(req, res) {
+    // Precisamos buscar categorias, dificuldades e ingredientes para mostrar no formulário
+    // Vamos fazer 3 queries diferentes
 
-        res.render('backoffice/receitas/form', {
-            title: 'Nova Receita',
-            receita: null,
-            categorias,
-            dificuldades,
-            ingredientes,
-            error: null
-        });
-    } catch (error) {
-        console.error('Erro ao carregar formulário:', error);
-        res.status(500).send('Erro ao carregar formulário');
-    }
-});
-
-// Criar receita
-router.post('/receitas/nova', upload.single('imagem'), async (req, res) => {
-    try {
-        // Preparar dados da receita
-        const receitaData = {
-            ...req.body,
-            utilizador_id: req.session.utilizador.id
-        };
-
-        // Se foi feito upload de imagem, salvar o caminho
-        if (req.file) {
-            receitaData.imagem = '/uploads/receitas/' + req.file.filename;
+    Categoria.listarTodasCategorias(function(erro, categorias) {
+        if (erro) {
+            console.error('Erro ao carregar categorias:', erro);
+            return res.status(500).send('Erro ao carregar formulário');
         }
 
-        const receitaId = await Receita.create(receitaData);
+        // Buscar dificuldades
+        db.query('SELECT * FROM dificuldades ORDER BY ordem', function(erro, dificuldades) {
+            if (erro) {
+                console.error('Erro ao carregar dificuldades:', erro);
+                return res.status(500).send('Erro ao carregar formulário');
+            }
 
-        // Processar ingredientes
+            // Buscar ingredientes
+            Ingrediente.listarTodosIngredientes(function(erro, ingredientes) {
+                if (erro) {
+                    console.error('Erro ao carregar ingredientes:', erro);
+                    return res.status(500).send('Erro ao carregar formulário');
+                }
+
+                // Mostrar o formulário
+                res.render('backoffice/receitas/form', {
+                    title: 'Nova Receita',
+                    receita: null,
+                    categorias: categorias,
+                    dificuldades: dificuldades,
+                    ingredientes: ingredientes,
+                    error: null
+                });
+            });
+        });
+    });
+});
+
+// Processar formulário de criação de receita
+router.post('/receitas/nova', function(req, res) {
+    // Preparar dados da receita
+    const receitaData = {
+        nome: req.body.nome,
+        autor: req.body.autor,
+        descricao_preparacao: req.body.descricao_preparacao,
+        tempo_preparacao: req.body.tempo_preparacao,
+        custo: req.body.custo,
+        porcoes: req.body.porcoes,
+        categoria_id: req.body.categoria_id,
+        dificuldade_id: req.body.dificuldade_id,
+        utilizador_id: req.session.utilizador.id,
+        imagem: null
+    };
+
+    // Upload de imagem se enviada
+    if (req.files && req.files.imagem) {
+        try {
+            receitaData.imagem = upload.uploadImagem(req.files.imagem);
+        } catch (erro) {
+            console.error('Erro ao fazer upload da imagem:', erro);
+            return res.status(500).send('Erro ao fazer upload da imagem: ' + erro.message);
+        }
+    }
+
+    // Criar a receita
+    Receita.criarReceita(receitaData, function(erro, receitaId) {
+        if (erro) {
+            console.error('Erro ao criar receita:', erro);
+            return res.status(500).send('Erro ao criar receita: ' + erro.message);
+        }
+
+        // Processar ingredientes se foram enviados
         if (req.body.ingredientes) {
             const ingredientes = JSON.parse(req.body.ingredientes);
-            for (const ing of ingredientes) {
-                await Receita.addIngrediente(receitaId, ing.id, ing.quantidade);
+
+            // Função para adicionar ingredientes um por um
+            let index = 0;
+            function adicionarProximoIngrediente() {
+                if (index >= ingredientes.length) {
+                    // Todos ingredientes adicionados, redirecionar
+                    return res.redirect('/backoffice/receitas');
+                }
+
+                const ing = ingredientes[index];
+                Receita.adicionarIngrediente(receitaId, ing.id, ing.quantidade, function(erro) {
+                    if (erro) {
+                        console.error('Erro ao adicionar ingrediente:', erro);
+                    }
+                    index++;
+                    adicionarProximoIngrediente();
+                });
             }
-        }
 
-        res.redirect('/backoffice/receitas');
-    } catch (error) {
-        console.error('Erro ao criar receita:', error);
-        res.status(500).send('Erro ao criar receita: ' + error.message);
-    }
+            adicionarProximoIngrediente();
+        } else {
+            res.redirect('/backoffice/receitas');
+        }
+    });
 });
 
-// Formulário de edição de receita
-router.get('/receitas/editar/:id', async (req, res) => {
-    try {
-        const receita = await Receita.findById(req.params.id);
-        const ingredientesReceita = await Receita.getIngredientes(req.params.id);
-        const categorias = await Categoria.findAll();
-        const [dificuldades] = await db.query('SELECT * FROM dificuldades ORDER BY ordem');
-        const ingredientes = await Ingrediente.findAll();
+// Página do formulário para editar uma receita
+router.get('/receitas/editar/:id', function(req, res) {
+    const receitaId = req.params.id;
 
-        res.render('backoffice/receitas/form', {
-            title: 'Editar Receita',
-            receita: {
-                ...receita,
-                ingredientes: ingredientesReceita
-            },
-            categorias,
-            dificuldades,
-            ingredientes,
-            error: null
+    // Buscar a receita
+    Receita.buscarReceitaPorId(receitaId, function(erro, receita) {
+        if (erro) {
+            console.error('Erro ao carregar receita:', erro);
+            return res.status(500).send('Erro ao carregar receita');
+        }
+
+        // Buscar ingredientes da receita
+        Receita.buscarIngredientesReceita(receitaId, function(erro, ingredientesReceita) {
+            if (erro) {
+                console.error('Erro ao carregar ingredientes:', erro);
+                return res.status(500).send('Erro ao carregar receita');
+            }
+
+            // Buscar categorias
+            Categoria.listarTodasCategorias(function(erro, categorias) {
+                if (erro) {
+                    console.error('Erro ao carregar categorias:', erro);
+                    return res.status(500).send('Erro ao carregar formulário');
+                }
+
+                // Buscar dificuldades
+                db.query('SELECT * FROM dificuldades ORDER BY ordem', function(erro, dificuldades) {
+                    if (erro) {
+                        console.error('Erro ao carregar dificuldades:', erro);
+                        return res.status(500).send('Erro ao carregar formulário');
+                    }
+
+                    // Buscar todos os ingredientes
+                    Ingrediente.listarTodosIngredientes(function(erro, ingredientes) {
+                        if (erro) {
+                            console.error('Erro ao carregar ingredientes:', erro);
+                            return res.status(500).send('Erro ao carregar formulário');
+                        }
+
+                        // Adicionar ingredientes à receita
+                        receita.ingredientes = ingredientesReceita;
+
+                        // Mostrar o formulário
+                        res.render('backoffice/receitas/form', {
+                            title: 'Editar Receita',
+                            receita: receita,
+                            categorias: categorias,
+                            dificuldades: dificuldades,
+                            ingredientes: ingredientes,
+                            error: null
+                        });
+                    });
+                });
+            });
         });
-    } catch (error) {
-        console.error('Erro ao carregar receita:', error);
-        res.status(500).send('Erro ao carregar receita');
-    }
+    });
 });
 
-// Atualizar receita
-router.post('/receitas/editar/:id', upload.single('imagem'), async (req, res) => {
-    try {
-        // Preparar dados da receita
-        const receitaData = { ...req.body };
+// Processar formulário de edição de receita
+router.post('/receitas/editar/:id', function(req, res) {
+    const receitaId = req.params.id;
 
-        // Se foi feito upload de nova imagem, substituir
-        if (req.file) {
-            receitaData.imagem = '/uploads/receitas/' + req.file.filename;
-            // TODO: Apagar imagem antiga se existir
+    // Preparar dados da receita
+    const receitaData = {
+        nome: req.body.nome,
+        autor: req.body.autor,
+        descricao_preparacao: req.body.descricao_preparacao,
+        tempo_preparacao: req.body.tempo_preparacao,
+        custo: req.body.custo,
+        porcoes: req.body.porcoes,
+        categoria_id: req.body.categoria_id,
+        dificuldade_id: req.body.dificuldade_id,
+        imagem: req.body.imagem_atual || null
+    };
+
+    // Upload de nova imagem se enviada
+    if (req.files && req.files.imagem) {
+        try {
+            receitaData.imagem = upload.uploadImagem(req.files.imagem);
+        } catch (erro) {
+            console.error('Erro ao fazer upload da imagem:', erro);
+            return res.status(500).send('Erro ao fazer upload da imagem: ' + erro.message);
+        }
+    }
+
+    // Atualizar a receita
+    Receita.atualizarReceita(receitaId, receitaData, function(erro) {
+        if (erro) {
+            console.error('Erro ao atualizar receita:', erro);
+            return res.status(500).send('Erro ao atualizar receita: ' + erro.message);
         }
 
-        await Receita.update(req.params.id, receitaData);
-
-        // Atualizar ingredientes (remover todos e adicionar novamente)
-        // Aqui pode implementar lógica mais sofisticada se necessário
-
         res.redirect('/backoffice/receitas');
-    } catch (error) {
-        console.error('Erro ao atualizar receita:', error);
-        res.status(500).send('Erro ao atualizar receita: ' + error.message);
-    }
+    });
 });
 
 // Eliminar receita
-router.post('/receitas/eliminar/:id', async (req, res) => {
-    try {
-        await Receita.delete(req.params.id);
+router.post('/receitas/eliminar/:id', function(req, res) {
+    const receitaId = req.params.id;
+
+    Receita.eliminarReceita(receitaId, function(erro) {
+        if (erro) {
+            console.error('Erro ao eliminar receita:', erro);
+            return res.status(500).send('Erro ao eliminar receita');
+        }
+
         res.redirect('/backoffice/receitas');
-    } catch (error) {
-        console.error('Erro ao eliminar receita:', error);
-        res.status(500).send('Erro ao eliminar receita');
-    }
+    });
 });
 
 // ========== GESTÃO DE CATEGORIAS ==========
 
-// Listar categorias
-router.get('/categorias', async (req, res) => {
-    try {
-        const categorias = await Categoria.findAll();
+// Página que lista todas as categorias
+router.get('/categorias', function(req, res) {
+    Categoria.listarTodasCategorias(function(erro, categorias) {
+        if (erro) {
+            console.error('Erro ao listar categorias:', erro);
+            return res.status(500).send('Erro ao listar categorias');
+        }
+
         res.render('backoffice/categorias/lista', {
             title: 'Gestão de Categorias',
-            categorias
+            categorias: categorias
         });
-    } catch (error) {
-        console.error('Erro ao listar categorias:', error);
-        res.status(500).send('Erro ao listar categorias');
-    }
+    });
 });
 
-// Criar categoria
-router.post('/categorias/nova', async (req, res) => {
-    try {
-        await Categoria.create(req.body);
+// Criar nova categoria
+router.post('/categorias/nova', function(req, res) {
+    Categoria.criarCategoria(req.body, function(erro) {
+        if (erro) {
+            console.error('Erro ao criar categoria:', erro);
+            return res.status(500).send('Erro ao criar categoria');
+        }
+
         res.redirect('/backoffice/categorias');
-    } catch (error) {
-        console.error('Erro ao criar categoria:', error);
-        res.status(500).send('Erro ao criar categoria');
-    }
+    });
 });
 
 // ========== GESTÃO DE INGREDIENTES ==========
 
-// Listar ingredientes
-router.get('/ingredientes', async (req, res) => {
-    try {
-        const ingredientes = await Ingrediente.findAll();
+// Página que lista todos os ingredientes
+router.get('/ingredientes', function(req, res) {
+    Ingrediente.listarTodosIngredientes(function(erro, ingredientes) {
+        if (erro) {
+            console.error('Erro ao listar ingredientes:', erro);
+            return res.status(500).send('Erro ao listar ingredientes');
+        }
+
         res.render('backoffice/ingredientes/lista', {
             title: 'Gestão de Ingredientes',
-            ingredientes
+            ingredientes: ingredientes
         });
-    } catch (error) {
-        console.error('Erro ao listar ingredientes:', error);
-        res.status(500).send('Erro ao listar ingredientes');
-    }
+    });
 });
 
-// Criar ingrediente
-router.post('/ingredientes/novo', async (req, res) => {
-    try {
-        await Ingrediente.create(req.body.nome);
+// Criar novo ingrediente
+router.post('/ingredientes/novo', function(req, res) {
+    Ingrediente.criarIngrediente(req.body.nome, function(erro) {
+        if (erro) {
+            console.error('Erro ao criar ingrediente:', erro);
+            return res.status(500).send('Erro ao criar ingrediente');
+        }
+
         res.redirect('/backoffice/ingredientes');
-    } catch (error) {
-        console.error('Erro ao criar ingrediente:', error);
-        res.status(500).send('Erro ao criar ingrediente');
-    }
+    });
 });
 
+// Exportar as rotas para serem usadas no servidor principal
 module.exports = router;
