@@ -116,7 +116,7 @@ router.post('/receitas/nova', function(req, res) {
         porcoes: req.body.porcoes,
         categoria_id: req.body.categoria_id,
         dificuldade_id: req.body.dificuldade_id,
-        utilizador_id: req.session.utilizador.id,
+        utilizador_id: req.utilizador.id,  // Agora vem do token JWT
         imagem: null
     };
 

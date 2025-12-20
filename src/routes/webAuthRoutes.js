@@ -1,3 +1,7 @@
+// ========== ROTAS DE AUTENTICAÇÃO WEB ==========
+// Este ficheiro contém as rotas de autenticação para o website (HTML)
+// Para autenticação da API (JSON), ver apiRoutes.js
+
 // Importar módulos necessários
 const express = require('express');
 const router = express.Router();
@@ -5,8 +9,8 @@ const router = express.Router();
 // Importar funções do model
 const Utilizador = require('../models/Utilizador');
 
-// Importar middleware
-const { redirectIfAuthenticated } = require('../middleware/auth');
+// Importar middleware e funções JWT
+const { redirectIfAuthenticated, gerarToken } = require('../middleware/auth');
 
 // ========== PÁGINA DE LOGIN ==========
 // Mostrar formulário de login (só se não estiver logado)
@@ -69,22 +73,52 @@ router.post('/login', function(req, res) {
                 });
             }
 
-            // Login com sucesso! Criar sessão
-            req.session.utilizador = {
+            // Login com sucesso! Gerar token JWT
+            const token = gerarToken({
                 id: utilizador.id,
-                nome: utilizador.nome,
                 email: utilizador.email,
-                tipo: utilizador.tipo
-            };
+                tipo: utilizador.tipo,
+                nome: utilizador.nome
+            });
 
             console.log('Login bem sucedido:', utilizador.nome);
 
-            // Redirecionar conforme o tipo de utilizador
-            if (utilizador.tipo === 'admin') {
-                res.redirect('/backoffice');
-            } else {
-                res.redirect('/');
-            }
+            // Determinar para onde redirecionar
+            const redirecionarPara = utilizador.tipo === 'admin' ? '/backoffice' : '/';
+
+            // Definir cookie com o token (válido por 24 horas)
+            res.cookie('token', token, {
+                httpOnly: true,      // Não acessível via JavaScript (mais seguro)
+                maxAge: 24 * 60 * 60 * 1000  // 24 horas em milissegundos
+            });
+
+            // Enviar página HTML que armazena o token e redireciona
+            res.send(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Login - Redirecionando...</title>
+                </head>
+                <body>
+                    <p>Login bem-sucedido! Redirecionando...</p>
+                    <script>
+                        // Guardar token no localStorage (para uso da API)
+                        localStorage.setItem('token', '${token}');
+
+                        // Guardar dados do utilizador
+                        localStorage.setItem('utilizador', JSON.stringify({
+                            id: ${utilizador.id},
+                            nome: '${utilizador.nome}',
+                            email: '${utilizador.email}',
+                            tipo: '${utilizador.tipo}'
+                        }));
+
+                        // Redirecionar
+                        window.location.href = '${redirecionarPara}';
+                    </script>
+                </body>
+                </html>
+            `);
         });
     });
 });
@@ -163,29 +197,76 @@ router.post('/registo', function(req, res) {
                 });
             }
 
-            // Registo com sucesso! Criar sessão
-            req.session.utilizador = {
+            // Registo com sucesso! Gerar token JWT
+            const token = gerarToken({
                 id: utilizadorId,
-                nome: nome,
                 email: email,
-                tipo: 'user'
-            };
+                tipo: 'user',
+                nome: nome
+            });
 
-            // Redirecionar para a página inicial
-            res.redirect('/');
+            // Definir cookie com o token (válido por 24 horas)
+            res.cookie('token', token, {
+                httpOnly: true,      // Não acessível via JavaScript (mais seguro)
+                maxAge: 24 * 60 * 60 * 1000  // 24 horas em milissegundos
+            });
+
+            // Enviar página HTML que armazena o token e redireciona
+            res.send(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Registo - Redirecionando...</title>
+                </head>
+                <body>
+                    <p>Registo bem-sucedido! Redirecionando...</p>
+                    <script>
+                        // Guardar token no localStorage (para uso da API)
+                        localStorage.setItem('token', '${token}');
+
+                        // Guardar dados do utilizador
+                        localStorage.setItem('utilizador', JSON.stringify({
+                            id: ${utilizadorId},
+                            nome: '${nome}',
+                            email: '${email}',
+                            tipo: 'user'
+                        }));
+
+                        // Redirecionar para a página inicial
+                        window.location.href = '/';
+                    </script>
+                </body>
+                </html>
+            `);
         });
     });
 });
 
 // ========== LOGOUT ==========
 router.get('/logout', function(req, res) {
-    // Destruir a sessão
-    req.session.destroy(function(erro) {
-        if (erro) {
-            console.error('Erro ao fazer logout:', erro);
-        }
-        res.redirect('/login');
-    });
+    // Limpar o cookie do token
+    res.clearCookie('token');
+
+    // Enviar página HTML que limpa o localStorage e redireciona
+    res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Logout - Redirecionando...</title>
+        </head>
+        <body>
+            <p>A terminar sessão...</p>
+            <script>
+                // Limpar token e dados do utilizador do localStorage
+                localStorage.removeItem('token');
+                localStorage.removeItem('utilizador');
+
+                // Redirecionar para a página de login
+                window.location.href = '/login';
+            </script>
+        </body>
+        </html>
+    `);
 });
 
 // Exportar as rotas para serem usadas no servidor principal

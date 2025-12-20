@@ -2,10 +2,10 @@
 
 // Importar módulos necessários
 const express = require('express');           // Framework web para Node.js
-const session = require('express-session');   // Para gerir sessões de utilizadores
 const bodyParser = require('body-parser');    // Para processar dados de formulários
 const path = require('path');                 // Para trabalhar com caminhos de ficheiros
 const fileUpload = require('express-fileupload'); // Para upload de ficheiros
+const cookieParser = require('cookie-parser'); // Para ler cookies
 
 // Carregar variáveis de ambiente do ficheiro .env
 require('dotenv').config();
@@ -30,44 +30,54 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// 2. Upload de ficheiros
+// 2. Cookie Parser - processar cookies
+app.use(cookieParser());
+
+// 3. Upload de ficheiros
 app.use(fileUpload());
 
-// 3. Servir ficheiros estáticos (CSS, JavaScript, imagens)
+// 4. Servir ficheiros estáticos (CSS, JavaScript, imagens)
 // Tudo na pasta 'public' fica acessível no browser
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 4. Configurar sessões
-// As sessões guardam informação do utilizador entre pedidos
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'secret_key_change_in_production',
-    resave: false,                    // Não regravar sessão se não houver alterações
-    saveUninitialized: false,         // Não criar sessão vazia
-    cookie: {
-        secure: false,                // true só funciona com HTTPS
-        maxAge: 1000 * 60 * 60 * 24  // Sessão expira em 24 horas
-    }
-}));
-
-// 5. Disponibilizar dados do utilizador em todas as páginas
-// Assim podemos usar 'utilizador' nas views EJS
+// 5. Middleware para disponibilizar dados do utilizador nas views
+// Extrai o token do cookie e decodifica para usar nos templates EJS
+const { verificarToken } = require('./src/middleware/auth');
 app.use(function(req, res, next) {
-    res.locals.utilizador = req.session.utilizador || null;
-    next();
+    // Tentar extrair token do cookie
+    const token = req.cookies.token;
+
+    if (!token) {
+        // Sem token, utilizador não está autenticado
+        res.locals.utilizador = null;
+        return next();
+    }
+
+    // Verificar e decodificar o token
+    verificarToken(token, function(erro, dadosUtilizador) {
+        if (erro) {
+            // Token inválido, utilizador não está autenticado
+            res.locals.utilizador = null;
+        } else {
+            // Token válido, disponibilizar dados nas views
+            res.locals.utilizador = dadosUtilizador;
+        }
+        next();
+    });
 });
 
 // ========== ROTAS ==========
 // Importar ficheiros de rotas
-const authRoutes = require('./src/routes/authRoutes');
+const webAuthRoutes = require('./src/routes/webAuthRoutes');
 const backofficeRoutes = require('./src/routes/backofficeRoutes');
 const frontofficeRoutes = require('./src/routes/frontofficeRoutes');
 const apiRoutes = require('./src/routes/apiRoutes');
 
 // Registar as rotas na aplicação
-app.use('/', authRoutes);               // Login, registo, logout
+app.use('/', webAuthRoutes);            // Autenticação WEB (login, registo, logout)
 app.use('/backoffice', backofficeRoutes); // Área de administração
 app.use('/', frontofficeRoutes);        // Páginas públicas
-app.use('/api', apiRoutes);             // API REST
+app.use('/api', apiRoutes);             // API REST (retorna JSON)
 
 // ========== TRATAMENTO DE ERROS ==========
 

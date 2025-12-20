@@ -1,3 +1,8 @@
+// ========== API REST (JSON) ==========
+// Este ficheiro contém todas as rotas da API REST
+// Todas as respostas são em formato JSON
+// Para autenticação WEB (HTML), ver webAuthRoutes.js
+
 // Importar módulos necessários
 const express = require('express');
 const router = express.Router();
@@ -9,9 +14,8 @@ const Categoria = require('../models/Categoria');
 const Ingrediente = require('../models/Ingrediente');
 const Utilizador = require('../models/Utilizador');
 
-// Importar middlewares
-const { isAuthenticated } = require('../middleware/auth');
-const { gerarToken, protegerRotaAPI, verificarAdmin } = require('../middleware/jwtAuth');
+// Importar middlewares e funções JWT
+const { isAuthenticated, gerarToken, protegerRotaAPI, verificarAdmin } = require('../middleware/auth');
 
 // ========== AUTENTICAÇÃO DA API (JWT) ==========
 

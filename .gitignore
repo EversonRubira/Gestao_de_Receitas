@@ -3,6 +3,5 @@ node_modules/
 *.log
 .DS_Store
 
-
-public/images/uploads/*
-!public/images/uploads/.gitkeep
+public/uploads/receitas/*
+!public/uploads/receitas/.gitkeep
