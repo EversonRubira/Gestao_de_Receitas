@@ -10,8 +10,9 @@ Sistema de Gestao de Receitas - Projeto PIS 2025/2026
 - MySQL (v5.7+)
 
 **Autenticacao:**
-- express-session
-- bcryptjs
+- jsonwebtoken (JWT)
+- bcryptjs (encriptacao de passwords)
+- cookie-parser (gestao de cookies)
 
 **Outros:**
 - EJS (templates)
@@ -19,6 +20,7 @@ Sistema de Gestao de Receitas - Projeto PIS 2025/2026
 - express-fileupload (upload de ficheiros)
 - axios (APIs externas)
 - dotenv (variaveis de ambiente)
+- mysql2 (driver MySQL)
 
 ## 2. Estrutura do Projeto
 
@@ -154,60 +156,97 @@ GET /api/external/search/:termo
 
 ## 5. Autenticacao
 
-Sistema usa dois metodos:
+Sistema usa **JWT (JSON Web Tokens)** para toda a autenticacao (Web e API).
 
-### Sessions (Web e Backoffice)
+### Como Funciona
 
-Para utilizadores que navegam no browser.
+O sistema usa JWT de forma unificada:
+- **Web/Backoffice**: JWT guardado em cookie (httpOnly)
+- **API REST**: JWT enviado no header Authorization
 
-Quando o user faz login:
+### Login Web
+
+Quando o utilizador faz login no browser:
+
 ```javascript
-req.session.utilizador = {
-    id: 1,
-    nome: "Joao",
-    email: "joao@exemplo.pt",
-    tipo: "admin"
-};
+// 1. Sistema gera token JWT
+const token = gerarToken({
+    id: utilizador.id,
+    nome: utilizador.nome,
+    email: utilizador.email,
+    tipo: utilizador.tipo
+});
+
+// 2. Token e guardado em cookie
+res.cookie('token', token, {
+    httpOnly: true,              // Seguranca: nao acessivel via JavaScript
+    maxAge: 24 * 60 * 60 * 1000  // Valido por 24 horas
+});
+
+// 3. Token tambem guardado em localStorage (para uso da API)
+localStorage.setItem('token', token);
 ```
 
-### Middlewares
+### Middlewares para Paginas Web
 
-**isAuthenticated** - Verifica se esta logado
+**isAuthenticated** - Verifica se o utilizador esta logado
 ```javascript
 router.get('/perfil', isAuthenticated, function(req, res) {
-    // codigo
+    // req.utilizador contem dados do token JWT
+    // {id, nome, email, tipo}
 });
 ```
 
-**isAdmin** - Verifica se e admin
+**isAdmin** - Verifica se o utilizador e administrador
 ```javascript
-router.use('/backoffice', isAdmin);
+router.use('/backoffice', isAdmin, function(req, res) {
+    // Apenas admins podem aceder
+});
 ```
 
-### JWT (API)
+### JWT para API REST
 
-Para pedidos a API REST.
-
-**protegerRotaAPI** - Verifica token JWT
+**protegerRotaAPI** - Verifica token JWT em pedidos API
 ```javascript
 router.post('/api/receitas', protegerRotaAPI, function(req, res) {
-    // req.utilizador tem os dados do token
+    // req.utilizador tem os dados do token decodificado
 });
 ```
 
-**Como usar:**
-1. Fazer login: POST /api/auth/login
+**Como usar a API:**
+
+1. Fazer login para obter token:
+```bash
+POST /api/auth/login
+Body: {
+  "email": "user@exemplo.pt",
+  "password": "password123"
+}
+
+Resposta: {
+  "success": true,
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "utilizador": {...}
+}
+```
+
 2. Guardar o token recebido
-3. Enviar em cada pedido: `Authorization: Bearer TOKEN`
 
-**Exemplo:**
+3. Enviar token em cada pedido:
+```bash
+GET /api/receitas
+Headers:
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
 
-Token expira em 24 horas.
+**Token expira em 24 horas.**
 
-Ver ficheiro TESTE_API_JWT.md para mais detalhes.
+### Vantagens do JWT
+
+- **Stateless**: Servidor nao precisa guardar sessoes em memoria
+- **Escalavel**: Funciona bem com multiplos servidores
+- **Seguro**: Cookie com httpOnly previne ataques XSS
+- **Flexivel**: Mesmo sistema para web e API
 
 ### Passwords
 
@@ -289,7 +328,7 @@ DB_USER=root
 DB_PASSWORD=root
 DB_NAME=gestao_receitas
 DB_PORT=3306
-SESSION_SECRET=chave_secreta
+JWT_SECRET=chave_secreta_jwt_mudar_em_producao
 ```
 
 ### database.js
@@ -309,7 +348,7 @@ const connection = mysql.createConnection({
 ### upload.js
 
 Upload de imagens:
-- Pasta: `public/uploads/receitas/`
+- Pasta: `public/uploads/imagens/`
 - Tamanho max: 5MB
 - Tipos: JPG, PNG, GIF
 

@@ -1,0 +1,408 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "Gestão de Receitas - API REST",
+		"description": "Coleção de testes para a API REST do Sistema de Gestão de Receitas\nProjeto PIS 2025/2026",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Autenticação",
+			"item": [
+				{
+					"name": "Login - Obter Token JWT",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Salvar o token automaticamente",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"auth_token\", jsonData.token);",
+									"    console.log(\"Token salvo: \" + jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@receitas.pt\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/auth/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Fazer login e obter token JWT para autenticação.\n\nCredenciais de teste:\n- Email: admin@receitas.pt\n- Password: admin123"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de autenticação JWT"
+		},
+		{
+			"name": "2. Receitas (Público)",
+			"item": [
+				{
+					"name": "Listar Todas as Receitas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/receitas",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"receitas"
+							]
+						},
+						"description": "Listar todas as receitas disponíveis.\nNÃO requer autenticação."
+					},
+					"response": []
+				},
+				{
+					"name": "Obter Receita Específica",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/receitas/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"receitas",
+								"1"
+							]
+						},
+						"description": "Obter detalhes de uma receita específica pelo ID.\nNÃO requer autenticação."
+					},
+					"response": []
+				},
+				{
+					"name": "Pesquisar Receitas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/receitas?termo=bacalhau",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"receitas"
+							],
+							"query": [
+								{
+									"key": "termo",
+									"value": "bacalhau",
+									"description": "Termo de pesquisa"
+								},
+								{
+									"key": "categoria",
+									"value": "1",
+									"description": "ID da categoria (opcional)",
+									"disabled": true
+								},
+								{
+									"key": "dificuldade",
+									"value": "2",
+									"description": "ID da dificuldade (opcional)",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Pesquisar receitas por termo, categoria ou dificuldade.\nNÃO requer autenticação."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints públicos de receitas (não requerem autenticação)"
+		},
+		{
+			"name": "3. Receitas (Protegido - JWT)",
+			"item": [
+				{
+					"name": "Criar Nova Receita",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Arroz de Marisco\",\n  \"autor\": \"Chef António\",\n  \"descricao_preparacao\": \"Arroz cremoso com diversos mariscos frescos.\",\n  \"tempo_preparacao\": 60,\n  \"custo\": 25.50,\n  \"porcoes\": 4,\n  \"categoria_id\": 1,\n  \"dificuldade_id\": 3\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/receitas",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"receitas"
+							]
+						},
+						"description": "Criar uma nova receita.\nREQUER AUTENTICAÇÃO JWT - Faça login primeiro!"
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Receita",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Arroz de Marisco - Atualizado\",\n  \"autor\": \"Chef António Silva\",\n  \"descricao_preparacao\": \"Arroz cremoso com diversos mariscos frescos do Algarve.\",\n  \"tempo_preparacao\": 65,\n  \"custo\": 28.00,\n  \"porcoes\": 4,\n  \"categoria_id\": 1,\n  \"dificuldade_id\": 3\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/receitas/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"receitas",
+								"1"
+							]
+						},
+						"description": "Atualizar uma receita existente.\nREQUER AUTENTICAÇÃO JWT - Faça login primeiro!"
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Receita",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/receitas/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"receitas",
+								"1"
+							]
+						},
+						"description": "Eliminar uma receita.\nREQUER AUTENTICAÇÃO JWT - Faça login primeiro!"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints protegidos por JWT - requerem autenticação"
+		},
+		{
+			"name": "4. Categorias",
+			"item": [
+				{
+					"name": "Listar Todas as Categorias",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/categorias",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"categorias"
+							]
+						},
+						"description": "Listar todas as categorias de receitas.\nNÃO requer autenticação."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de categorias"
+		},
+		{
+			"name": "5. Ingredientes",
+			"item": [
+				{
+					"name": "Listar Todos os Ingredientes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/ingredientes",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"ingredientes"
+							]
+						},
+						"description": "Listar todos os ingredientes disponíveis.\nNÃO requer autenticação."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de ingredientes"
+		},
+		{
+			"name": "6. API Externa (TheMealDB)",
+			"item": [
+				{
+					"name": "Obter Receita Aleatória Externa",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/external/random",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"external",
+								"random"
+							]
+						},
+						"description": "Obter uma receita aleatória da API externa TheMealDB.\nEste endpoint chama um serviço externo usando Axios.\nNÃO requer autenticação."
+					},
+					"response": []
+				},
+				{
+					"name": "Pesquisar Receita Externa",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/external/search/chicken",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"external",
+								"search",
+								"chicken"
+							]
+						},
+						"description": "Pesquisar receitas na API externa TheMealDB.\nEste endpoint chama um serviço externo usando Axios.\nNÃO requer autenticação."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints que consomem API externa (TheMealDB)"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

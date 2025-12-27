@@ -3,7 +3,7 @@ const path = require('path');  // Para trabalhar com caminhos de ficheiros
 const fs = require('fs');      // Para trabalhar com sistema de ficheiros
 
 // Pasta onde vamos guardar as imagens
-const PASTA_UPLOADS = 'public/uploads/receitas';
+const PASTA_UPLOADS = 'public/uploads/imagens';
 
 // Verificar se a pasta existe, se não existir, criar
 if (!fs.existsSync(PASTA_UPLOADS)) {
@@ -38,7 +38,7 @@ function uploadImagem(ficheiro) {
     ficheiro.mv(caminhoCompleto);
 
     // Retornar o caminho que vamos guardar na base de dados
-    return '/uploads/receitas/' + nomeNovo;
+    return '/uploads/imagens/' + nomeNovo;
 }
 
 // Exportar a função para ser usada noutros ficheiros
